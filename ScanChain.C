@@ -12,12 +12,15 @@
 #include "TFile.h"
 #include "TROOT.h"
 #include "TTreeCache.h"
+#include "TH1F.h"
 
 // LepTree
 #include "LepTree.cc"
 
 using namespace std;
 using namespace lepTree;
+
+typedef ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<float> > LorentzVector;
 
 int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFilePrefix = "test") {
 
@@ -40,6 +43,18 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
   TH1F *h_tight_mueta = new TH1F("h_tight_mueta", "Muon eta", 80, -3, 3);
   TH1F *h_tight_muphi = new TH1F("h_tight_muphi", "Muon phi", 80, -3.5, 3.5);
 
+  TH1F *h_loose_trig_mupt  = new TH1F("h_loose_trig_mupt",  "Muon pt",  80, 0, 0);
+  TH1F *h_loose_trig_mueta = new TH1F("h_loose_trig_mueta", "Muon eta", 80, -3, 3);
+  TH1F *h_loose_trig_muphi = new TH1F("h_loose_trig_muphi", "Muon phi", 80, -3.5, 3.5);
+
+  TH1F *h_med_trig_mupt  = new TH1F("h_med_trig_mupt",  "Muon pt",  80, 0, 0);
+  TH1F *h_med_trig_mueta = new TH1F("h_med_trig_mueta", "Muon eta", 80, -3, 3);
+  TH1F *h_med_trig_muphi = new TH1F("h_med_trig_muphi", "Muon phi", 80, -3.5, 3.5);
+
+  TH1F *h_tight_trig_mupt  = new TH1F("h_tight_trig_mupt",  "Muon pt",  80, 0, 0);
+  TH1F *h_tight_trig_mueta = new TH1F("h_tight_trig_mueta", "Muon eta", 80, -3, 3);
+  TH1F *h_tight_trig_muphi = new TH1F("h_tight_trig_muphi", "Muon phi", 80, -3.5, 3.5);
+
   // Loop over events to Analyze
   unsigned int nEventsTotal = 0;
   unsigned int nEventsChain = chain->GetEntries();
@@ -58,6 +73,11 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
     if(fast) tree->SetCacheSize(128*1024*1024);
     t.Init(tree);
     
+    int evt_num = -1;
+    int nMuonCount = 0;
+    int isTriggerMuon = 0;
+    LorentzVector p4mu;
+    
     // Loop over Events in current file
     if( nEventsTotal >= nEventsChain ) continue;
     unsigned int nEventsTree = tree->GetEntriesFast();
@@ -73,30 +93,94 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
       LepTree::progress( nEventsTotal, nEventsChain );
 
       // Analysis Code
-      // for(unsigned int i=0; i<p4().size(); i++){
-      if( abs(id()) != 13 ) continue;
-      if (p4().pt() < 20.0) continue;
-      if (fabs(p4().eta()) > 2.4) continue;
-      if (RelIso03EA() > 0.2) continue;
+      
+      // if (event > 200) break;          // debug
 
-      if (passes_POG_looseID()){
-        h_loose_mupt->Fill(p4().pt());
-        h_loose_mueta->Fill(p4().eta());
-        h_loose_muphi->Fill(p4().phi());
-      } 
-      else if (passes_POG_mediumID()){
-        h_med_mupt->Fill(p4().pt());
-        h_med_mueta->Fill(p4().eta());
-        h_med_muphi->Fill(p4().phi());
-      } 
-      else if (passes_POG_tightID()){
-        h_tight_mupt->Fill(p4().pt());
-        h_tight_mueta->Fill(p4().eta());
-        h_tight_muphi->Fill(p4().phi());
-      } 
-        
-      // }
+      int nevt = evt_event();
+      if (nevt != evt_num) {
+        evt_num = nevt;
+        if(nMuonCount == 1) {
+          if (passes_POG_looseID()) {
+            h_loose_mupt->Fill(p4mu.pt());
+            h_loose_mueta->Fill(p4mu.eta());
+            h_loose_muphi->Fill(p4mu.phi());
+            if (isTriggerMuon == 1) {
+              h_loose_trig_mupt->Fill(p4mu.pt());
+              h_loose_trig_mueta->Fill(p4mu.eta());
+              h_loose_trig_muphi->Fill(p4mu.phi());
+            }
+          } 
+          else if (passes_POG_mediumID()) {
+            h_med_mupt->Fill(p4mu.pt());
+            h_med_mueta->Fill(p4mu.eta());
+            h_med_muphi->Fill(p4mu.phi());
+            if (isTriggerMuon == 1) {
+              h_med_trig_mupt->Fill(p4mu.pt());
+              h_med_trig_mueta->Fill(p4mu.eta());
+              h_med_trig_muphi->Fill(p4mu.phi());
+            }
+          } 
+          else if (passes_POG_tightID()) {
+            h_tight_mupt->Fill(p4mu.pt());
+            h_tight_mueta->Fill(p4mu.eta());
+            h_tight_muphi->Fill(p4mu.phi());
+            if (isTriggerMuon == 1) {
+              h_tight_trig_mupt->Fill(p4mu.pt());
+              h_tight_trig_mueta->Fill(p4mu.eta());
+              h_tight_trig_muphi->Fill(p4mu.phi());
+            }
+          }
+        }
+        // if(isTriggerMuon > 1) cout << "Error: More than one trigger muon!!\n";
+        nMuonCount = 0;
+        isTriggerMuon = 0;
+      }
 
+
+      if (abs(id()) == 13 && p4().pt() > 20.0 && fabs(p4().eta()) < 2.4 && RelIso03EA() < 0.2 ){
+        nMuonCount++;
+        if (HLT_IsoMu20() > 0) isTriggerMuon++;
+        p4mu = p4();
+
+        // cout << "[Debug] This is the " << event << "th event, with evt_event() " << evt_event()
+        //      << ", isTriggerMuon = " << isTriggerMuon << ", and nMuonCount = " << nMuonCount << ",\n"
+        //      << "   while mupt = " << p4mu.pt() << ", and HLT_IsoMu20() = " << HLT_IsoMu20()
+        //      << ", HLT_Mu17() = " << HLT_Mu17() << ", HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL() = " << HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL() << endl;
+      }
+
+      // start filling if last event
+      if (event == nEventsTree-1 && nMuonCount == 1) {
+        if (passes_POG_looseID()) {
+          h_loose_mupt->Fill(p4mu.pt());
+          h_loose_mueta->Fill(p4mu.eta());
+          h_loose_muphi->Fill(p4mu.phi());
+          if (isTriggerMuon == 1) {
+            h_loose_trig_mupt->Fill(p4mu.pt());
+            h_loose_trig_mueta->Fill(p4mu.eta());
+            h_loose_trig_muphi->Fill(p4mu.phi());
+          }
+        } 
+        else if (passes_POG_mediumID()) {
+          h_med_mupt->Fill(p4mu.pt());
+          h_med_mueta->Fill(p4mu.eta());
+          h_med_muphi->Fill(p4mu.phi());
+          if (isTriggerMuon == 1) {
+            h_med_trig_mupt->Fill(p4mu.pt());
+            h_med_trig_mueta->Fill(p4mu.eta());
+            h_med_trig_muphi->Fill(p4mu.phi());
+          }
+        } 
+        else if (passes_POG_tightID()) {
+          h_tight_mupt->Fill(p4mu.pt());
+          h_tight_mueta->Fill(p4mu.eta());
+          h_tight_muphi->Fill(p4mu.phi());
+          if (isTriggerMuon == 1) {
+            h_tight_trig_mupt->Fill(p4mu.pt());
+            h_tight_trig_mueta->Fill(p4mu.eta());
+            h_tight_trig_muphi->Fill(p4mu.phi());
+          }
+        }
+      }
     }
   
     // Clean Up
@@ -122,6 +206,18 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
   h_tight_mupt->Write();
   h_tight_mueta->Write();
   h_tight_muphi->Write();
+
+  h_loose_trig_mupt->Write();
+  h_loose_trig_mueta->Write();
+  h_loose_trig_muphi->Write();
+
+  h_med_trig_mupt->Write();
+  h_med_trig_mueta->Write();
+  h_med_trig_muphi->Write();
+
+  h_tight_trig_mupt->Write();
+  h_tight_trig_mueta->Write();
+  h_tight_trig_muphi->Write();
 
   file->Close();
 
