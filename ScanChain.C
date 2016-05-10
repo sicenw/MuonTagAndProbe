@@ -42,6 +42,19 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
   TH1F *h_loose_mueta = new TH1F("h_loose_mueta", "Muon eta", 90, -3, 3);
   TH1F *h_loose_muphi = new TH1F("h_loose_muphi", "Muon phi", 90, -3.5, 3.5);
 
+  TH1F *h_loose_tag_mupt  = new TH1F("h_loose_tag_mupt",  "Tag Muon pt",  90, 0, 150);
+  TH1F *h_loose_tag_mueta = new TH1F("h_loose_tag_mueta", "Tag Muon eta", 90, -3, 3);
+  TH1F *h_loose_tag_muphi = new TH1F("h_loose_tag_muphi", "Tag Muon phi", 90, -3.5, 3.5);
+
+  TH1F *h_muonCount = new TH1F("h_muonCount", "Number of Muons in this event", 90, 0, 5);
+
+  TH1F *h_test_tag_muphi1 = new TH1F("h_test_tag_muphi1", "Tag Muon phi", 90, -3.5, 3.5);
+  TH1F *h_test_tag_muphi2 = new TH1F("h_test_tag_muphi2", "Tag Muon phi", 90, -3.5, 3.5);
+  TH1F *h_test_tag_muphi3 = new TH1F("h_test_tag_muphi3", "Tag Muon phi", 90, -3.5, 3.5);
+
+  TH1F *h_loose_invM    = new TH1F("h_loose_invM",   "InvM between tag & probe",  90, 0, 180);
+  TH1F *h_loose_dilepM  = new TH1F("h_loose_dilepM", "InvM of the dilepton",      90, 0, 180);
+
   TH1F *h_med_mupt  = new TH1F("h_med_mupt",  "Muon pt",  90, 0, 150);
   TH1F *h_med_mueta = new TH1F("h_med_mueta", "Muon eta", 90, -3, 3);
   TH1F *h_med_muphi = new TH1F("h_med_muphi", "Muon phi", 90, -3.5, 3.5);
@@ -84,6 +97,10 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
     int nMuonCount = 0;
     int isTriggerMuon = 0;
     LorentzVector p4mu;
+    LorentzVector tag_p4mu;
+    int passLooseID  = false;
+    int passMediumID = false;
+    int passTightID  = false;
     
     // Loop over Events in current file
     if( nEventsTotal >= nEventsChain ) continue;
@@ -101,23 +118,31 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
 
       // Analysis Code
       
-      // if (event > 200) break;          // debug
+      // bool debug = true;
+      bool debug = false;
+      if (debug && event > 200) break;          // debug
 
       int nevt = evt_event();
       if (nevt != evt_num) {
         evt_num = nevt;
+        Fill1F(h_muonCount, nMuonCount);
+
         if(nMuonCount == 1) {
-          if (passes_POG_looseID()) {
+          if (passLooseID) {
             Fill1F(h_loose_mupt, p4mu.pt());
             Fill1F(h_loose_mueta, p4mu.eta());
             Fill1F(h_loose_muphi, p4mu.phi());
+            Fill1F(h_loose_tag_mupt, tag_p4mu.pt());
+            Fill1F(h_loose_tag_mueta, tag_p4mu.eta());
+            Fill1F(h_loose_tag_muphi, tag_p4mu.phi());
+            Fill1F(h_loose_invM, (p4mu+tag_p4mu).M());
             if (isTriggerMuon == 1) {
               Fill1F(h_loose_trig_mupt, p4mu.pt());
               Fill1F(h_loose_trig_mueta, p4mu.eta());
               Fill1F(h_loose_trig_muphi, p4mu.phi());
             }
           } 
-          if (passes_POG_mediumID()) {
+          if (passMediumID) {
             Fill1F(h_med_mupt, p4mu.pt());
             Fill1F(h_med_mueta, p4mu.eta());
             Fill1F(h_med_muphi, p4mu.phi());
@@ -127,7 +152,7 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
               Fill1F(h_med_trig_muphi, p4mu.phi());
             }
           } 
-          if (passes_POG_tightID()) {
+          if (passTightID) {
             Fill1F(h_tight_mupt, p4mu.pt());
             Fill1F(h_tight_mueta, p4mu.eta());
             Fill1F(h_tight_muphi, p4mu.phi());
@@ -143,30 +168,46 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
         isTriggerMuon = 0;
       }
 
-      if (abs(id()) == 13 && p4().pt() > 20.0 && fabs(p4().eta()) < 2.4 && RelIso03EA() < 0.2 ){
+      if (abs(id()) == 13 && p4().pt() > 20.0 && fabs(p4().eta()) < 2.4 && RelIso03EA() < 0.2 && passes_POG_looseID() > 0){
         nMuonCount++;
+
+        if (nMuonCount == 2) h_test_tag_muphi1->Fill(p4mu.phi());
+
         if (HLT_IsoMu20() > 0) isTriggerMuon++;
+        passLooseID  = passes_POG_looseID();
+        passMediumID = passes_POG_mediumID();
+        passTightID  = passes_POG_tightID();
 
         p4mu = p4();
-        // cout << "[Debug] This is the " << event << "th event, with evt_event() " << evt_event()
-        //      << ", isTriggerMuon = " << isTriggerMuon << ", and nMuonCount = " << nMuonCount << ",\n"
-        //      << "   while mupt = " << p4mu.pt() << ", and HLT_IsoMu20() = " << HLT_IsoMu20()
-        //      << ", HLT_Mu17() = " << HLT_Mu17() << ", HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL() = " << HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL() << endl;
+        tag_p4mu = tag_p4();
+
+        if (nMuonCount == 2) h_test_tag_muphi2->Fill(p4mu.phi());
+        else if (nMuonCount > 2) h_test_tag_muphi3->Fill(p4mu.phi());
+
+        if (debug)
+          cout << "[Debug] This is the " << event << "th event, with evt_event() " << evt_event()
+               << ", isTriggerMuon = " << isTriggerMuon << ", and nMuonCount = " << nMuonCount << ",\n"
+               << "    while mupt = " << p4mu.pt() << ", tag_mupt = " << tag_p4mu.pt() << ", and HLT_IsoMu20() = " << HLT_IsoMu20() << endl;
+        // << ", HLT_Mu17() = " << HLT_Mu17() << ", HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL() = " << HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL() << endl;
       }
 
       // start filling if last event
       if (event == nEventsTree-1 && nMuonCount == 1) {
-        if (passes_POG_looseID()) {
+        if (passLooseID) {
           Fill1F(h_loose_mupt, p4mu.pt());
           Fill1F(h_loose_mueta, p4mu.eta());
           Fill1F(h_loose_muphi, p4mu.phi());
+          Fill1F(h_loose_tag_mupt, tag_p4mu.pt());
+          Fill1F(h_loose_tag_mueta, tag_p4mu.eta());
+          Fill1F(h_loose_tag_muphi, tag_p4mu.phi());
+          Fill1F(h_loose_invM, (p4mu+tag_p4mu).M());
           if (isTriggerMuon == 1) {
             Fill1F(h_loose_trig_mupt, p4mu.pt());
             Fill1F(h_loose_trig_mueta, p4mu.eta());
             Fill1F(h_loose_trig_muphi, p4mu.phi());
           }
         } 
-        if (passes_POG_mediumID()) {
+        if (passMediumID) {
           Fill1F(h_med_mupt, p4mu.pt());
           Fill1F(h_med_mueta, p4mu.eta());
           Fill1F(h_med_muphi, p4mu.phi());
@@ -176,7 +217,7 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
             Fill1F(h_med_trig_muphi, p4mu.phi());
           }
         } 
-        if (passes_POG_tightID()) {
+        if (passTightID) {
           Fill1F(h_tight_mupt, p4mu.pt());
           Fill1F(h_tight_mueta, p4mu.eta());
           Fill1F(h_tight_muphi, p4mu.phi());
@@ -204,6 +245,17 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
   h_loose_mupt->Write();
   h_loose_mueta->Write();
   h_loose_muphi->Write();
+
+  h_loose_tag_mupt->Write();
+  h_loose_tag_mueta->Write();
+  h_loose_tag_muphi->Write();
+
+  h_test_tag_muphi1->Write();
+  h_test_tag_muphi2->Write();
+  h_test_tag_muphi3->Write();
+
+  h_muonCount->Write();
+  h_loose_invM->Write();
 
   h_med_mupt->Write();
   h_med_mueta->Write();
