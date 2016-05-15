@@ -13,6 +13,7 @@
 #include "TROOT.h"
 #include "TTreeCache.h"
 #include "TH1F.h"
+#include "TH2F.h"
 
 // LepTree
 #include "LepTree.cc"
@@ -39,8 +40,10 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
   TDirectory *rootdir = gDirectory->GetDirectory("Rint:");
   // samplehisto->SetDirectory(rootdir);
   TH1F *h_loose_mupt  = new TH1F("h_loose_mupt",  "Muon pt",  90, 0, 150);
-  TH1F *h_loose_mueta = new TH1F("h_loose_mueta", "Muon eta", 90, -3, 3);
-  TH1F *h_loose_muphi = new TH1F("h_loose_muphi", "Muon phi", 90, -3.5, 3.5);
+  TH1F *h_loose_mueta = new TH1F("h_loose_mueta", "Muon eta", 45, -3, 3);
+  TH1F *h_loose_muphi = new TH1F("h_loose_muphi", "Muon phi", 60, -3.5, 3.5);
+
+  TH2F *h_loose_mu_etaVphi = new TH2F("h_loose_mu_etaVphi", "Muon eta : phi", 60, -3, 3, 70, -3.5, 3.5);
 
   TH1F *h_muonCount = new TH1F("h_muonCount", "Number of Muons in this event", 90, 0, 5);
 
@@ -124,29 +127,29 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
     if(fast) TTreeCache::SetLearnEntries(10);
     if(fast) tree->SetCacheSize(128*1024*1024);
     t.Init(tree);
-    
+
     int evt_num = -1;
     int nMuonCount = 0;
     int isTriggerMuon = 0;
     LorentzVector p4mu;
     LorentzVector tag_p4mu;
-    
+
     // Loop over Events in current file
     if( nEventsTotal >= nEventsChain ) continue;
     unsigned int nEventsTree = tree->GetEntriesFast();
     for( unsigned int event = 0; event < nEventsTree; ++event) {
-    
+
       // Get Event Content
       if( nEventsTotal >= nEventsChain ) continue;
       if(fast) tree->LoadTree(event);
       t.GetEntry(event);
       ++nEventsTotal;
-    
+
       // Progress
       LepTree::progress( nEventsTotal, nEventsChain );
 
       // Analysis Code
-      
+
       // bool debug = true;
       bool debug = false;
       if (debug && event > 200) break;          // debug
@@ -161,7 +164,7 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
       //   cout << "[Debug] This is the " << event << "th event, with evt_event() " << evt_event()
       //        << ", isTriggerMuon = " << isTriggerMuon << ", and nMuonCount = " << nMuonCount << ",\n"
       //        << "    while mupt = " << p4().pt() << "    while mueta = " << p4().eta() << "    while muphi = " << p4().phi()
-      //        << "\n    RelIso03EA = " <<  RelIso03EA() << ", passes_POG_looseID = " << passes_POG_looseID() 
+      //        << "\n    RelIso03EA = " <<  RelIso03EA() << ", passes_POG_looseID = " << passes_POG_looseID()
       //        << "\n    tag_mupt = " << tag_p4().pt() << "    while mueta = " << tag_p4().eta() << "    while muphi = " << tag_p4().phi()
       //        << "\n    HLT_IsoMu20() = " << HLT_IsoMu20() << ", dilep_pt = " << dilep_p4().pt() << ", dilep_mass = " << dilep_mass() << endl << endl;
 
@@ -182,10 +185,11 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
         Fill1F(h_noID_mupt, p4().pt());
         Fill1F(h_noID_mueta, p4().eta());
         Fill1F(h_noID_muphi, p4().phi());
-        Fill1F(h_noID_trig_mupt, p4().pt());
-        Fill1F(h_noID_trig_mueta, p4().eta());
-        Fill1F(h_noID_trig_muphi, p4().phi());
-
+        if (HLT_IsoMu20() > 0) {
+          Fill1F(h_noID_trig_mupt, p4().pt());
+          Fill1F(h_noID_trig_mueta, p4().eta());
+          Fill1F(h_noID_trig_muphi, p4().phi());
+        }
         Fill1F(h_noID_tag_mupt, tag_p4().pt());
         Fill1F(h_noID_tag_mueta, tag_p4().eta());
         Fill1F(h_noID_tag_muphi, tag_p4().phi());
@@ -196,7 +200,7 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
         }
 
         Fill1F(h_dilepM, dilep_mass());
-    
+
         // p4mu = p4();
         // tag_p4mu = tag_p4();
         if (passes_POG_looseID()) {
@@ -204,6 +208,8 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
           Fill1F(h_loose_mueta, p4().eta());
           Fill1F(h_loose_muphi, p4().phi());
           Fill1F(h_loose_invM, (p4()+tag_p4()).M());
+
+          h_loose_mu_etaVphi->Fill(p4().phi(), p4().eta());
           // if (probe_HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_LeadingLeg()) {
           if (HLT_IsoMu20()) {
             Fill1F(h_loose_trig_mupt, p4().pt());
@@ -224,7 +230,7 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
             Fill1F(h_loose_tag_trig_mueta, tag_p4().eta());
             Fill1F(h_loose_tag_trig_muphi, tag_p4().phi());
           }
-        } 
+        }
         if (passes_POG_mediumID()) {
           Fill1F(h_med_mupt, p4().pt());
           Fill1F(h_med_mueta, p4().eta());
@@ -235,7 +241,7 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
             Fill1F(h_med_trig_mueta, p4().eta());
             Fill1F(h_med_trig_muphi, p4().phi());
           }
-        } 
+        }
         if (passes_POG_tightID()) {
           Fill1F(h_tight_mupt, p4().pt());
           Fill1F(h_tight_mueta, p4().eta());
@@ -255,7 +261,7 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
         // << ", HLT_Mu17() = " << HLT_Mu17() << ", HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL() = " << HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL() << endl;
       }
     }
-  
+
     // Clean Up
     delete tree;
     file.Close();
@@ -263,7 +269,7 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
   if ( nEventsChain != nEventsTotal ) {
     cout << Form( "ERROR: number of events from files (%d) is not equal to total number of events (%d)", nEventsChain, nEventsTotal ) << endl;
   }
-  
+
   // return
   bmark->Stop("benchmark");
 
@@ -271,6 +277,8 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
   h_loose_mupt->Write();
   h_loose_mueta->Write();
   h_loose_muphi->Write();
+
+  h_loose_mu_etaVphi->Write();
 
   h_noID_mupt->Write();
   h_noID_mueta->Write();
@@ -320,11 +328,11 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
   h_tight_trig_mueta->Write();
   h_tight_trig_muphi->Write();
 
-  h_tag_mupt->Write(); 
+  h_tag_mupt->Write();
   h_tag_mueta->Write();
   h_tag_muphi->Write();
 
-  h_tag_trig_mupt->Write(); 
+  h_tag_trig_mupt->Write();
   h_tag_trig_mueta->Write();
   h_tag_trig_muphi->Write();
 
