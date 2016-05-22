@@ -47,16 +47,19 @@ vector<TH1F*> getEfficiencyPlot(TFile* file, string triggerName, bool drawPlots 
 
     eff_mupt->SetTitle(Form("%s efficiency in muon p_{T}", triggerName.c_str()));
     eff_mupt->GetXaxis()->SetTitle("p_{T}");
+    eff_mupt->GetYaxis()->SetRangeUser(0, 1);
     eff_mupt->Draw("PE");
     c1->SaveAs(Form("%s_eff_mupt.png", triggerName.c_str()));
     c1->Clear();
     eff_mueta->SetTitle(Form("%s efficiency in muon eta", triggerName.c_str()));
     eff_mueta->GetXaxis()->SetTitle("eta");
+    eff_mueta->GetYaxis()->SetRangeUser(0, 1);
     eff_mueta->Draw("PE");
     c1->SaveAs(Form("%s_eff_mueta.png", triggerName.c_str()));
     c1->Clear();
     eff_muphi->SetTitle(Form("%s efficiency in muon phi", triggerName.c_str()));
     eff_muphi->GetXaxis()->SetTitle("phi");
+    eff_muphi->GetYaxis()->SetRangeUser(0, 1);
     eff_muphi->Draw("PE");
     c1->SaveAs(Form("%s_eff_muphi.png", triggerName.c_str()));
     c1->Close();
