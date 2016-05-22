@@ -52,6 +52,8 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
   TH1F *h_num_IsoMu24_mueta = new TH1F("h_num_IsoMu24_mueta", "Muon eta", 60, -3, 3);
   TH1F *h_num_IsoMu24_muphi = new TH1F("h_num_IsoMu24_muphi", "Muon phi", 70, -3.5, 3.5);
 
+  TH1F *h_dilepM_IsoMu24  = new TH1F("h_dilepM_IsoMu24", "InvM of the dilepton", 90, 0, 180);
+
   TH1F *h_tag_IsoTkMu24_mupt  = new TH1F("h_tag_IsoTkMu24_mupt",  "Muon pt",  90, 0, 150);
   TH1F *h_tag_IsoTkMu24_mueta = new TH1F("h_tag_IsoTkMu24_mueta", "Muon eta", 60, -3, 3);
   TH1F *h_tag_IsoTkMu24_muphi = new TH1F("h_tag_IsoTkMu24_muphi", "Muon phi", 70, -3.5, 3.5);
@@ -64,6 +66,8 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
   TH1F *h_num_IsoTkMu24_mueta = new TH1F("h_num_IsoTkMu24_mueta", "Muon eta", 60, -3, 3);
   TH1F *h_num_IsoTkMu24_muphi = new TH1F("h_num_IsoTkMu24_muphi", "Muon phi", 70, -3.5, 3.5);
 
+  TH1F *h_dilepM_IsoTkMu24  = new TH1F("h_dilepM_IsoTkMu24", "InvM of the dilepton", 90, 0, 180);
+
   TH1F *h_tag_IsoMu20_mupt  = new TH1F("h_tag_IsoMu20_mupt",  "Muon pt",  90, 0, 150);
   TH1F *h_tag_IsoMu20_mueta = new TH1F("h_tag_IsoMu20_mueta", "Muon eta", 60, -3, 3);
   TH1F *h_tag_IsoMu20_muphi = new TH1F("h_tag_IsoMu20_muphi", "Muon phi", 70, -3.5, 3.5);
@@ -75,6 +79,8 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
   TH1F *h_num_IsoMu20_mupt  = new TH1F("h_num_IsoMu20_mupt",  "Muon pt",  90, 0, 150);
   TH1F *h_num_IsoMu20_mueta = new TH1F("h_num_IsoMu20_mueta", "Muon eta", 60, -3, 3);
   TH1F *h_num_IsoMu20_muphi = new TH1F("h_num_IsoMu20_muphi", "Muon phi", 70, -3.5, 3.5);
+
+  TH1F *h_dilepM_IsoMu20  = new TH1F("h_dilepM_IsoMu20", "InvM of the dilepton", 90, 0, 180);
 
   TH1F *h_muonCount = new TH1F("h_muonCount", "Number of Muons in this event", 90, 0, 5);
 
@@ -120,7 +126,9 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
 
       // bool debug = true;
       bool debug = false;
-      if (debug && event > 200) break;          // debug
+      if (debug && event > 200) break;     // debug
+
+      if (evt_run() < 273423) continue;    // After fixing the L1 interface problem
 
       int nevt = evt_event();
       if (nevt != evt_num) {
@@ -137,6 +145,7 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
         Fill1F(h_tag_IsoMu24_mueta, tag_p4().eta());
         Fill1F(h_tag_IsoMu24_muphi, tag_p4().phi());
         if (fabs(p4().eta()) < 2.4 && RelIso03EA() < 0.15 && passes_POG_mediumID()) {
+          Fill1F(h_dilepM_IsoMu24, dilep_mass());
           Fill1F(h_den_IsoMu24_mupt,  p4().pt());
           Fill1F(h_den_IsoMu24_mueta, p4().eta());
           Fill1F(h_den_IsoMu24_muphi, p4().phi());
@@ -153,6 +162,7 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
         Fill1F(h_tag_IsoTkMu24_mueta, tag_p4().eta());
         Fill1F(h_tag_IsoTkMu24_muphi, tag_p4().phi());
         if (fabs(p4().eta()) < 2.4 && RelIso03EA() < 0.15 && passes_POG_mediumID()) {
+          Fill1F(h_dilepM_IsoTkMu24, dilep_mass());
           Fill1F(h_den_IsoTkMu24_mupt,  p4().pt());
           Fill1F(h_den_IsoTkMu24_mueta, p4().eta());
           Fill1F(h_den_IsoTkMu24_muphi, p4().phi());
@@ -169,6 +179,7 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
         Fill1F(h_tag_IsoMu20_mueta, tag_p4().eta());
         Fill1F(h_tag_IsoMu20_muphi, tag_p4().phi());
         if (fabs(p4().eta()) < 2.4 && RelIso03EA() < 0.15 && passes_POG_mediumID()) {
+          Fill1F(h_dilepM_IsoMu20, dilep_mass());
           Fill1F(h_den_IsoMu20_mupt,  p4().pt());
           Fill1F(h_den_IsoMu20_mueta, p4().eta());
           Fill1F(h_den_IsoMu20_muphi, p4().phi());
@@ -212,6 +223,8 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
   h_num_IsoMu24_mueta->Write();
   h_num_IsoMu24_muphi->Write();
 
+  h_dilepM_IsoMu24->Write();
+
   h_tag_IsoTkMu24_mupt->Write();
   h_tag_IsoTkMu24_mueta->Write();
   h_tag_IsoTkMu24_muphi->Write();
@@ -224,6 +237,8 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
   h_num_IsoTkMu24_mueta->Write();
   h_num_IsoTkMu24_muphi->Write();
 
+  h_dilepM_IsoTkMu24->Write();
+
   h_tag_IsoMu20_mupt->Write();
   h_tag_IsoMu20_mueta->Write();
   h_tag_IsoMu20_muphi->Write();
@@ -235,6 +250,8 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
   h_num_IsoMu20_mupt->Write();
   h_num_IsoMu20_mueta->Write();
   h_num_IsoMu20_muphi->Write();
+
+  h_dilepM_IsoMu20->Write();
 
   TH1F *h_eff_IsoMu24_mupt  = (TH1F*) h_num_IsoMu24_mupt->Clone();
   TH1F *h_eff_IsoMu24_mueta = (TH1F*) h_num_IsoMu24_mueta->Clone();
