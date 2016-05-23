@@ -61,20 +61,25 @@ vector< map< histType,TH1F*> > creatMuonHists(vector<string> triggerNames){
   return triggerHists;
 }
 
-void fillMuonHists(map<histType, TH1F*>& histmap){
+inline void writeEfficiencyPlots(map< histType,TH1F*>& histmap, TFile* file){
+  for(unsigned int j=0; j<histmap.size(); j++)
+    histmap[(histType) j]->Write();
 
+  TH1F *h_eff_mupt  = (TH1F*) histmap[num_mupt] ->Clone();
+  TH1F *h_eff_mueta = (TH1F*) histmap[num_mueta]->Clone();
+  TH1F *h_eff_muphi = (TH1F*) histmap[num_muphi]->Clone();
 
-}
+  h_eff_mupt ->SetName(string(h_eff_mupt ->GetName()).replace(2, 5, "eff").c_str());
+  h_eff_mueta->SetName(string(h_eff_mueta->GetName()).replace(2, 5, "eff").c_str());
+  h_eff_muphi->SetName(string(h_eff_muphi->GetName()).replace(2, 5, "eff").c_str());
 
-inline int getTriggerValue(TBranch* trig_branch, int event){
+  h_eff_mupt ->Divide(histmap[den_mupt]);
+  h_eff_mueta->Divide(histmap[den_mueta]);
+  h_eff_muphi->Divide(histmap[den_muphi]);
 
-  if (trig_branch == 0) {cerr << "Error: getTriggerValue: TBranch* is empty!" << endl; return 0;}
-
-  int trig_value = 0;
-  trig_branch->SetAddress(&trig_value);
-  trig_branch->GetEntry(event);
-
-  return trig_value;
+  h_eff_mupt ->Write();
+  h_eff_mueta->Write();
+  h_eff_muphi->Write();
 }
 
 vector<TBranch*> setupTriggerBranches(vector<string> triggerNames, TTree* tree){
@@ -105,6 +110,34 @@ vector<TBranch*> setupTagTriggerBranches(vector<string> triggerNames, TTree* tre
   return tagTrigBranches;
 }
 
+inline int getTriggerValue(TBranch* trig_branch, int event){
+
+  if (trig_branch == 0) {cerr << "Error: getTriggerValue: TBranch* is empty!" << endl; return 0;}
+
+  int trig_value = 0;
+  trig_branch->SetAddress(&trig_value);
+  trig_branch->GetEntry(event);
+
+  return trig_value;
+}
+
+inline void fillTagMuonHists(map< histType,TH1F* >& histmap){
+  Fill1F(histmap[tag_mupt], tag_p4().pt());
+  Fill1F(histmap[tag_mueta], tag_p4().eta());
+  Fill1F(histmap[tag_muphi], tag_p4().phi());
+}
+
+inline void fillProbeMuonHists(map< histType,TH1F* >& histmap, TBranch* trig_branch, int event){
+  Fill1F(histmap[den_mupt], p4().pt());
+  Fill1F(histmap[den_mueta], p4().eta());
+  Fill1F(histmap[den_muphi], p4().phi());
+  if (getTriggerValue(trig_branch, event) > 0){
+    Fill1F(histmap[num_mupt], p4().pt());
+    Fill1F(histmap[num_mueta], p4().eta());
+    Fill1F(histmap[num_muphi], p4().phi());
+  }
+  Fill1F(histmap[dilep_invm], dilep_mass());
+}
 
 int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFilePrefix = "test") {
 
@@ -116,51 +149,12 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
   TDirectory *rootdir = gDirectory->GetDirectory("Rint:");
   // samplehisto->SetDirectory(rootdir);
 
-  TH1F *h_tag_IsoMu24_mupt  = new TH1F("h_tag_IsoMu24_mupt",  "Muon pt",  90, 0, 150);
-  TH1F *h_tag_IsoMu24_mueta = new TH1F("h_tag_IsoMu24_mueta", "Muon eta", 60, -3, 3);
-  TH1F *h_tag_IsoMu24_muphi = new TH1F("h_tag_IsoMu24_muphi", "Muon phi", 70, -3.5, 3.5);
-
-  TH1F *h_den_IsoMu24_mupt  = new TH1F("h_den_IsoMu24_mupt",  "Muon pt",  90, 0, 150);
-  TH1F *h_den_IsoMu24_mueta = new TH1F("h_den_IsoMu24_mueta", "Muon eta", 60, -3, 3);
-  TH1F *h_den_IsoMu24_muphi = new TH1F("h_den_IsoMu24_muphi", "Muon phi", 70, -3.5, 3.5);
-
-  TH1F *h_num_IsoMu24_mupt  = new TH1F("h_num_IsoMu24_mupt",  "Muon pt",  90, 0, 150);
-  TH1F *h_num_IsoMu24_mueta = new TH1F("h_num_IsoMu24_mueta", "Muon eta", 60, -3, 3);
-  TH1F *h_num_IsoMu24_muphi = new TH1F("h_num_IsoMu24_muphi", "Muon phi", 70, -3.5, 3.5);
-
-  TH1F *h_dilepM_IsoMu24  = new TH1F("h_dilepM_IsoMu24", "InvM of the dilepton", 90, 0, 180);
-
-  TH1F *h_tag_IsoTkMu24_mupt  = new TH1F("h_tag_IsoTkMu24_mupt",  "Muon pt",  90, 0, 150);
-  TH1F *h_tag_IsoTkMu24_mueta = new TH1F("h_tag_IsoTkMu24_mueta", "Muon eta", 60, -3, 3);
-  TH1F *h_tag_IsoTkMu24_muphi = new TH1F("h_tag_IsoTkMu24_muphi", "Muon phi", 70, -3.5, 3.5);
-
-  TH1F *h_den_IsoTkMu24_mupt  = new TH1F("h_den_IsoTkMu24_mupt",  "Muon pt",  90, 0, 150);
-  TH1F *h_den_IsoTkMu24_mueta = new TH1F("h_den_IsoTkMu24_mueta", "Muon eta", 60, -3, 3);
-  TH1F *h_den_IsoTkMu24_muphi = new TH1F("h_den_IsoTkMu24_muphi", "Muon phi", 70, -3.5, 3.5);
-
-  TH1F *h_num_IsoTkMu24_mupt  = new TH1F("h_num_IsoTkMu24_mupt",  "Muon pt",  90, 0, 150);
-  TH1F *h_num_IsoTkMu24_mueta = new TH1F("h_num_IsoTkMu24_mueta", "Muon eta", 60, -3, 3);
-  TH1F *h_num_IsoTkMu24_muphi = new TH1F("h_num_IsoTkMu24_muphi", "Muon phi", 70, -3.5, 3.5);
-
-  TH1F *h_dilepM_IsoTkMu24  = new TH1F("h_dilepM_IsoTkMu24", "InvM of the dilepton", 90, 0, 180);
-
-  TH1F *h_tag_IsoMu20_mupt  = new TH1F("h_tag_IsoMu20_mupt",  "Muon pt",  90, 0, 150);
-  TH1F *h_tag_IsoMu20_mueta = new TH1F("h_tag_IsoMu20_mueta", "Muon eta", 60, -3, 3);
-  TH1F *h_tag_IsoMu20_muphi = new TH1F("h_tag_IsoMu20_muphi", "Muon phi", 70, -3.5, 3.5);
-
-  TH1F *h_den_IsoMu20_mupt  = new TH1F("h_den_IsoMu20_mupt",  "Muon pt",  90, 0, 150);
-  TH1F *h_den_IsoMu20_mueta = new TH1F("h_den_IsoMu20_mueta", "Muon eta", 60, -3, 3);
-  TH1F *h_den_IsoMu20_muphi = new TH1F("h_den_IsoMu20_muphi", "Muon phi", 70, -3.5, 3.5);
-
-  TH1F *h_num_IsoMu20_mupt  = new TH1F("h_num_IsoMu20_mupt",  "Muon pt",  90, 0, 150);
-  TH1F *h_num_IsoMu20_mueta = new TH1F("h_num_IsoMu20_mueta", "Muon eta", 60, -3, 3);
-  TH1F *h_num_IsoMu20_muphi = new TH1F("h_num_IsoMu20_muphi", "Muon phi", 70, -3.5, 3.5);
-
-  TH1F *h_dilepM_IsoMu20  = new TH1F("h_dilepM_IsoMu20", "InvM of the dilepton", 90, 0, 180);
-
   TH1F *h_muonCount = new TH1F("h_muonCount", "Number of Muons in this event", 90, 0, 5);
 
   vector<string> triggerNames;
+  triggerNames.push_back("HLT_IsoMu24");
+  triggerNames.push_back("HLT_IsoTkMu24");
+  triggerNames.push_back("HLT_IsoMu20");
   triggerNames.push_back("HLT_IsoTkMu20");
 
   vector< map< histType,TH1F*> > muonHists = creatMuonHists(triggerNames);
@@ -188,6 +182,9 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
     int isTriggerMuon = 0;
     LorentzVector p4mu;
     LorentzVector tag_p4mu;
+
+    vector<TBranch*> trigBranches = setupTriggerBranches(triggerNames, tree);
+    vector<TBranch*> tagTrigBranches = setupTagTriggerBranches(triggerNames, tree);
 
     // Loop over Events in current file
     if( nEventsTotal >= nEventsChain ) continue;
@@ -219,68 +216,13 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
       }
 
       // --- New Tag & Probe ---
-      if( abs(id()) != 13 ) continue;
-
-
-      // --- Tag & Probe ---
-      // if( abs(id()) == 13 && fabs(tag_p4().eta()) < 2.4 && tag_RelIso03EA() < 0.2){
-      if( abs(id()) != 13 ) continue;
-      if (tag_HLT_IsoMu24() > 0) {
-        Fill1F(h_tag_IsoMu24_mupt, tag_p4().pt());
-        Fill1F(h_tag_IsoMu24_mueta, tag_p4().eta());
-        Fill1F(h_tag_IsoMu24_muphi, tag_p4().phi());
-        if (fabs(p4().eta()) < 2.4 && RelIso03EA() < 0.15 && passes_POG_mediumID()) {
-          Fill1F(h_dilepM_IsoMu24, dilep_mass());
-          Fill1F(h_den_IsoMu24_mupt,  p4().pt());
-          Fill1F(h_den_IsoMu24_mueta, p4().eta());
-          Fill1F(h_den_IsoMu24_muphi, p4().phi());
-          if (HLT_IsoMu24() > 0){
-            Fill1F(h_num_IsoMu24_mupt,  p4().pt());
-            Fill1F(h_num_IsoMu24_mueta, p4().eta());
-            Fill1F(h_num_IsoMu24_muphi, p4().phi());
-          }
-        }
+      if (abs(id()) != 13) continue;
+      for (unsigned int i=0; i<triggerNames.size(); i++){
+        if (getTriggerValue(tagTrigBranches[i], event) > 0)
+          fillTagMuonHists(muonHists[i]);
+        if (fabs(p4().eta()) < 2.4 && RelIso03EA() < 0.15 && passes_POG_mediumID())
+          fillProbeMuonHists(muonHists[i], trigBranches[i], event);
       }
-
-      if (tag_HLT_IsoTkMu24() > 0) {
-        Fill1F(h_tag_IsoTkMu24_mupt, tag_p4().pt());
-        Fill1F(h_tag_IsoTkMu24_mueta, tag_p4().eta());
-        Fill1F(h_tag_IsoTkMu24_muphi, tag_p4().phi());
-        if (fabs(p4().eta()) < 2.4 && RelIso03EA() < 0.15 && passes_POG_mediumID()) {
-          Fill1F(h_dilepM_IsoTkMu24, dilep_mass());
-          Fill1F(h_den_IsoTkMu24_mupt,  p4().pt());
-          Fill1F(h_den_IsoTkMu24_mueta, p4().eta());
-          Fill1F(h_den_IsoTkMu24_muphi, p4().phi());
-          if (HLT_IsoTkMu24() > 0){
-            Fill1F(h_num_IsoTkMu24_mupt,  p4().pt());
-            Fill1F(h_num_IsoTkMu24_mueta, p4().eta());
-            Fill1F(h_num_IsoTkMu24_muphi, p4().phi());
-          }
-        }
-      }
-
-      if (tag_HLT_IsoMu20() > 0) {
-        Fill1F(h_tag_IsoMu20_mupt, tag_p4().pt());
-        Fill1F(h_tag_IsoMu20_mueta, tag_p4().eta());
-        Fill1F(h_tag_IsoMu20_muphi, tag_p4().phi());
-        if (fabs(p4().eta()) < 2.4 && RelIso03EA() < 0.15 && passes_POG_mediumID()) {
-          Fill1F(h_dilepM_IsoMu20, dilep_mass());
-          Fill1F(h_den_IsoMu20_mupt,  p4().pt());
-          Fill1F(h_den_IsoMu20_mueta, p4().eta());
-          Fill1F(h_den_IsoMu20_muphi, p4().phi());
-          if (HLT_IsoMu20() > 0){
-            Fill1F(h_num_IsoMu20_mupt,  p4().pt());
-            Fill1F(h_num_IsoMu20_mueta, p4().eta());
-            Fill1F(h_num_IsoMu20_muphi, p4().phi());
-          }
-        }
-      }
-
-      if (debug)
-        cout << "[Debug] This is the " << event << "th event, with evt_event() " << evt_event()
-             << ", isTriggerMuon = " << isTriggerMuon << ", and nMuonCount = " << nMuonCount << ",\n"
-             << "    while mupt = " << p4().pt() << ", tag_mupt = " << tag_p4().pt() << ", and HLT_IsoMu20() = " << HLT_IsoMu20() << endl << endl;
-      // << ", HLT_Mu17() = " << HLT_Mu17() << ", HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL() = " << HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL() << endl;
     }
 
     // Clean Up
@@ -294,86 +236,18 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
   // return
   bmark->Stop("benchmark");
 
-  TFile* file = new TFile("hists.root", "RECREATE");
+  TFile* outfile = new TFile("hists.root", "RECREATE");
 
-  h_tag_IsoMu24_mupt->Write();
-  h_tag_IsoMu24_mueta->Write();
-  h_tag_IsoMu24_muphi->Write();
-
-  h_den_IsoMu24_mupt->Write();
-  h_den_IsoMu24_mueta->Write();
-  h_den_IsoMu24_muphi->Write();
-
-  h_num_IsoMu24_mupt->Write();
-  h_num_IsoMu24_mueta->Write();
-  h_num_IsoMu24_muphi->Write();
-
-  h_dilepM_IsoMu24->Write();
-
-  h_tag_IsoTkMu24_mupt->Write();
-  h_tag_IsoTkMu24_mueta->Write();
-  h_tag_IsoTkMu24_muphi->Write();
-
-  h_den_IsoTkMu24_mupt->Write();
-  h_den_IsoTkMu24_mueta->Write();
-  h_den_IsoTkMu24_muphi->Write();
-
-  h_num_IsoTkMu24_mupt->Write();
-  h_num_IsoTkMu24_mueta->Write();
-  h_num_IsoTkMu24_muphi->Write();
-
-  h_dilepM_IsoTkMu24->Write();
-
-  h_tag_IsoMu20_mupt->Write();
-  h_tag_IsoMu20_mueta->Write();
-  h_tag_IsoMu20_muphi->Write();
-
-  h_den_IsoMu20_mupt->Write();
-  h_den_IsoMu20_mueta->Write();
-  h_den_IsoMu20_muphi->Write();
-
-  h_num_IsoMu20_mupt->Write();
-  h_num_IsoMu20_mueta->Write();
-  h_num_IsoMu20_muphi->Write();
-
-  h_dilepM_IsoMu20->Write();
-
-  TH1F *h_eff_IsoMu24_mupt  = (TH1F*) h_num_IsoMu24_mupt->Clone();
-  TH1F *h_eff_IsoMu24_mueta = (TH1F*) h_num_IsoMu24_mueta->Clone();
-  TH1F *h_eff_IsoMu24_muphi = (TH1F*) h_num_IsoMu24_muphi->Clone();
-
-  h_eff_IsoMu24_mupt->SetName("h_eff_IsoMu24_mupt");
-  h_eff_IsoMu24_mueta->SetName("h_eff_IsoMu24_mueta");
-  h_eff_IsoMu24_muphi->SetName("h_eff_IsoMu24_muphi");
-
-  h_eff_IsoMu24_mupt->Divide(h_den_IsoMu24_mupt);
-  h_eff_IsoMu24_mueta->Divide(h_den_IsoMu24_mueta);
-  h_eff_IsoMu24_muphi->Divide(h_den_IsoMu24_muphi);
-
-  h_eff_IsoMu24_mupt->Write();
-  h_eff_IsoMu24_mueta->Write();
-  h_eff_IsoMu24_muphi->Write();
-
-  TH1F *h_eff_IsoMu20_mupt  = (TH1F*) h_num_IsoMu20_mupt->Clone();
-  TH1F *h_eff_IsoMu20_mueta = (TH1F*) h_num_IsoMu20_mueta->Clone();
-  TH1F *h_eff_IsoMu20_muphi = (TH1F*) h_num_IsoMu20_muphi->Clone();
-
-  h_eff_IsoMu20_mupt->SetName("h_eff_IsoMu20_mupt");
-  h_eff_IsoMu20_mueta->SetName("h_eff_IsoMu20_mueta");
-  h_eff_IsoMu20_muphi->SetName("h_eff_IsoMu20_muphi");
-
-  h_eff_IsoMu20_mupt->Divide(h_den_IsoMu20_mupt);
-  h_eff_IsoMu20_mueta->Divide(h_den_IsoMu20_mueta);
-  h_eff_IsoMu20_muphi->Divide(h_den_IsoMu20_muphi);
-
-  h_eff_IsoMu20_mupt->Write();
-  h_eff_IsoMu20_mueta->Write();
-  h_eff_IsoMu20_muphi->Write();
+  for(unsigned int i=0; i<triggerNames.size(); i++){
+    TDirectory * dir = (TDirectory*) outfile->mkdir(triggerNames[i].c_str());
+    dir->cd();
+    writeEfficiencyPlots(muonHists[i], outfile);
+  }
 
   h_muonCount->Write();
   // h_dilepM->Write();
 
-  file->Close();
+  outfile->Close();
   // cout << "\n------------------------------\n"
   //      << "moreThan2Muons: " << moreThan2Muons
   //      << "\n------------------------------\n";
