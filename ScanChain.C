@@ -4,6 +4,7 @@
 // C++
 #include <iostream>
 #include <vector>
+#include <map>
 
 // ROOT
 #include "TBenchmark.h"
@@ -30,14 +31,13 @@ void Fill1F(TH1F *&hist, double x, double w = 1)
   hist->Fill(x, w);
 }
 
-/*
-enum histType {tag_mupt, tag_mueta, tag_muphi, den_mupt, den_mueta, den_muphi, num_mupt, num_mueta, num_muphi, dilep_mass};
+enum histType {tag_mupt, tag_mueta, tag_muphi, den_mupt, den_mueta, den_muphi, num_mupt, num_mueta, num_muphi, dilep_invm};
 
-vector<map<histType,TH1F*>> creatMuonHists(vector<string> tiggerNames){
+vector< map< histType,TH1F*> > creatMuonHists(vector<string> triggerNames){
 
-  vector<map<histType,TH1F*>> triggerHists;
+  vector< map< histType,TH1F*> > triggerHists;
 
-  for(int i=0; i < triggerNames.size(); i++){
+  for(unsigned int i=0; i < triggerNames.size(); i++){
 
     map<histType, TH1F*> muonHists;
 
@@ -53,7 +53,7 @@ vector<map<histType,TH1F*>> creatMuonHists(vector<string> tiggerNames){
     muonHists[num_mueta]  = new TH1F(Form("h_num_%s_mueta",  triggerNames[i].c_str()), "Muon eta", 60, -3, 3);
     muonHists[num_muphi]  = new TH1F(Form("h_num_%s_muphi",  triggerNames[i].c_str()), "Muon phi", 70, -3.5, 3.5);
 
-    muonHists[dilep_mass] = new TH1F(Form("h_dilep_%s_mass", triggerNames[i].c_str()), "InvM of the dilepton", 90, 0, 180);
+    muonHists[dilep_invm] = new TH1F(Form("h_dilep_%s_invm", triggerNames[i].c_str()), "InvM of the dilepton", 90, 0, 180);
 
     triggerHists.push_back(muonHists);
   }
@@ -66,52 +66,44 @@ void fillMuonHists(map<histType, TH1F*>& histmap){
 
 }
 
+inline int getTriggerValue(TBranch* trig_branch, int event){
 
+  if (trig_branch == 0) {cerr << "Error: getTriggerValue: TBranch* is empty!" << endl; return 0;}
 
-// inline int getTriggerValue(string trigName, TTree* tree, int event){
+  int trig_value = 0;
+  trig_branch->SetAddress(&trig_value);
+  trig_branch->GetEntry(event);
 
-//   TBranch* trig_branch;
-//   trig_branch = tree->GetBranch(trigName.c_str());
-//   if (trig_branch == 0) {cerr << "Error: Cannot find branch under name: " << trigName << endl; return 0;}
+  return trig_value;
+}
 
-//   int trig_value = 0;
-//   trig_branch->SetAddress(&trig_value);
-//   trig_branch->GetEntry(event);
-
-//   return trig_value;
-// }
-
-
-vector<TBranch*>& setupTriggerBranches(vector<string> triggerNames, TTree* tree, int event){
+vector<TBranch*> setupTriggerBranches(vector<string> triggerNames, TTree* tree){
 
   vector<TBranch*> trigBranches;
 
-  for(int i=0; i<triggerNames.size(); i++){
-
+  for(unsigned int i=0; i<triggerNames.size(); i++){
     TBranch* trig_branch;
     trig_branch = tree->GetBranch(triggerNames[i].c_str());
-    if (trig_branch == 0) {cerr << "Error: Cannot find branch under name: " << triggerNames[i] << endl; return 0;}
+    if (trig_branch == 0) {cerr << "Error: Cannot find branch under name: " << triggerNames[i] << endl; return trigBranches;}
 
-    int trig_value = 0;
-    trig_branch->SetAddress(&trig_value);
+    trigBranches.push_back(trig_branch);
   }
   return trigBranches;
 }
 
-vector<TBranch*>& setupTagTriggerBranches(vector<string> triggerNames, TTree* tree, int event){
+vector<TBranch*> setupTagTriggerBranches(vector<string> triggerNames, TTree* tree){
 
-  vector<TBranch*> trigBranches;
+  vector<TBranch*> tagTrigBranches;
 
-  for(int i=0; i<triggerNames.size(); i++){
-
+  for(unsigned int i=0; i<triggerNames.size(); i++){
     TBranch* tag_trig_branch;
     tag_trig_branch = tree->GetBranch(Form("tag_%s", triggerNames[i].c_str()));
-    if (tag_trig_branch == 0) {cerr << "Error: Cannot find branch under name: tag_" << triggerNames[i] << endl; return 0;}
-    tag_trig_branch->SetAddress(&trig_value);
+    if (tag_trig_branch == 0) {cerr << "Error: Cannot find branch under name: tag_" << triggerNames[i] << endl; return tagTrigBranches;}
+
+    tagTrigBranches.push_back(tag_trig_branch);
   }
-  return trigBranches;
+  return tagTrigBranches;
 }
-*/
 
 
 int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFilePrefix = "test") {
@@ -168,6 +160,11 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
 
   TH1F *h_muonCount = new TH1F("h_muonCount", "Number of Muons in this event", 90, 0, 5);
 
+  vector<string> triggerNames;
+  triggerNames.push_back("HLT_IsoTkMu20");
+
+  vector< map< histType,TH1F*> > muonHists = creatMuonHists(triggerNames);
+
   // Loop over events to Analyze
   unsigned int nEventsTotal = 0;
   unsigned int nEventsChain = chain->GetEntries();
@@ -220,6 +217,10 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
         nMuonCount = 0;
         isTriggerMuon = 0;
       }
+
+      // --- New Tag & Probe ---
+      if( abs(id()) != 13 ) continue;
+
 
       // --- Tag & Probe ---
       // if( abs(id()) == 13 && fabs(tag_p4().eta()) < 2.4 && tag_RelIso03EA() < 0.2){
