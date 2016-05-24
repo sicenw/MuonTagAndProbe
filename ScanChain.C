@@ -196,6 +196,11 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
   triggerNames.push_back("HLT_IsoMu20");
   triggerNames.push_back("HLT_IsoTkMu20");
 
+  // Separate vector to store the pt cut to be used for eta and phi
+  vector<float> triggerPtCuts(triggerNames.size(), 30);
+  triggerPtCuts[2] = 25;
+  triggerPtCuts[3] = 25;
+
   vector< map< histType,TH1F*> > muonHists = creatMuonHists(triggerNames);
 
   // Loop over events to Analyze
@@ -255,10 +260,10 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
       for (unsigned int i=0; i<triggerNames.size(); i++){
 
         if (getTriggerValue(tagTrigBranches[i], event) > 0)
-          fillTagMuonHists(muonHists[i]);
+          fillTagMuonHists(muonHists[i], triggerPtCuts[i]);
 
         if (fabs(p4().eta()) < 2.4 && RelIso03EA() < 0.15 && passes_POG_mediumID())
-          fillProbeMuonHists(muonHists[i], trigBranches[i], event);
+          fillProbeMuonHists(muonHists[i], trigBranches[i], event, triggerPtCuts[i]);
       }
     }
 
