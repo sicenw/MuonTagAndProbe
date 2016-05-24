@@ -53,7 +53,7 @@ vector< map< histType,TH1F*> > creatMuonHists(vector<string> triggerNames){
     muonHists[num_mueta]  = new TH1F(Form("h_num_%s_mueta",  triggerNames[i].c_str()), Form("Muon eta in %s", triggerNames[i].c_str()), 60, -3, 3);
     muonHists[num_muphi]  = new TH1F(Form("h_num_%s_muphi",  triggerNames[i].c_str()), Form("Muon phi in %s", triggerNames[i].c_str()), 70, -3.5, 3.5);
 
-    muonHists[dilep_invm] = new TH1F(Form("h_dilep_%s_invm", triggerNames[i].c_str()), "InvM of the dilepton", 90, 0, 180);
+    muonHists[dilep_invm] = new TH1F(Form("h_dilep_%s_invm", triggerNames[i].c_str()), Form("InvM of the dilepton in %s", triggerNames[i].c_str()), 90, 0, 180);
 
     triggerHists.push_back(muonHists);
   }
@@ -121,7 +121,7 @@ vector<TBranch*> setupTriggerBranches(vector<string> triggerNames, TTree* tree){
   for(unsigned int i=0; i<triggerNames.size(); i++){
     TBranch* trig_branch;
     trig_branch = tree->GetBranch(triggerNames[i].c_str());
-    if (trig_branch == 0) {cerr << "Error: Cannot find branch under name: " << triggerNames[i] << endl; return trigBranches;}
+    if (trig_branch == 0) {cerr << "Error: Cannot find branch under name: " << triggerNames[i] << endl; exit(-1);}
 
     trigBranches.push_back(trig_branch);
   }
@@ -135,7 +135,7 @@ vector<TBranch*> setupTagTriggerBranches(vector<string> triggerNames, TTree* tre
   for(unsigned int i=0; i<triggerNames.size(); i++){
     TBranch* tag_trig_branch;
     tag_trig_branch = tree->GetBranch(Form("tag_%s", triggerNames[i].c_str()));
-    if (tag_trig_branch == 0) {cerr << "Error: Cannot find branch under name: tag_" << triggerNames[i] << endl; return tagTrigBranches;}
+    if (tag_trig_branch == 0) {cerr << "Error: Cannot find branch under name: tag_" << triggerNames[i] << endl; exit(-1);}
 
     tagTrigBranches.push_back(tag_trig_branch);
   }
@@ -189,6 +189,7 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
 
   TH1F *h_muonCount = new TH1F("h_muonCount", "Number of Muons in this event", 90, 0, 5);
 
+  // MuonTagAndProbe: define the trigger to check here
   vector<string> triggerNames;
   triggerNames.push_back("HLT_IsoMu24");
   triggerNames.push_back("HLT_IsoTkMu24");
@@ -240,10 +241,6 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
 
       // Analysis Code
 
-      // bool debug = true;
-      bool debug = false;
-      if (debug && event > 200) break;     // debug
-
       if (evt_run() < 273423) continue;    // Get runs after fixing the L1 interface problem
 
       int nevt = evt_event();
@@ -285,12 +282,8 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
   }
 
   h_muonCount->Write();
-  // h_dilepM->Write();
 
   outfile->Close();
-  // cout << "\n------------------------------\n"
-  //      << "moreThan2Muons: " << moreThan2Muons
-  //      << "\n------------------------------\n";
 
   cout << endl;
   cout << nEventsTotal << " Events Processed" << endl;
