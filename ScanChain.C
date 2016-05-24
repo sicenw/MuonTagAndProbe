@@ -41,17 +41,17 @@ vector< map< histType,TH1F*> > creatMuonHists(vector<string> triggerNames){
 
     map<histType, TH1F*> muonHists;
 
-    muonHists[tag_mupt]   = new TH1F(Form("h_tag_%s_mupt",   triggerNames[i].c_str()), "Muon pt",  90, 0, 150);
-    muonHists[tag_mueta]  = new TH1F(Form("h_tag_%s_mueta",  triggerNames[i].c_str()), "Muon eta", 60, -3, 3);
-    muonHists[tag_muphi]  = new TH1F(Form("h_tag_%s_muphi",  triggerNames[i].c_str()), "Muon phi", 70, -3.5, 3.5);
+    muonHists[tag_mupt]   = new TH1F(Form("h_tag_%s_mupt",   triggerNames[i].c_str()), Form("Muon pt in tag_%s",  triggerNames[i].c_str()), 90, 0, 150);
+    muonHists[tag_mueta]  = new TH1F(Form("h_tag_%s_mueta",  triggerNames[i].c_str()), Form("Muon eta in tag_%s", triggerNames[i].c_str()), 60, -3, 3);
+    muonHists[tag_muphi]  = new TH1F(Form("h_tag_%s_muphi",  triggerNames[i].c_str()), Form("Muon phi in tag_%s", triggerNames[i].c_str()), 70, -3.5, 3.5);
 
-    muonHists[den_mupt]   = new TH1F(Form("h_den_%s_mupt",   triggerNames[i].c_str()), "Muon pt",  90, 0, 150);
-    muonHists[den_mueta]  = new TH1F(Form("h_den_%s_mueta",  triggerNames[i].c_str()), "Muon eta", 60, -3, 3);
-    muonHists[den_muphi]  = new TH1F(Form("h_den_%s_muphi",  triggerNames[i].c_str()), "Muon phi", 70, -3.5, 3.5);
+    muonHists[den_mupt]   = new TH1F(Form("h_den_%s_mupt",   triggerNames[i].c_str()), Form("Muon pt in %s",  triggerNames[i].c_str()), 90, 0, 150);
+    muonHists[den_mueta]  = new TH1F(Form("h_den_%s_mueta",  triggerNames[i].c_str()), Form("Muon eta in %s", triggerNames[i].c_str()), 60, -3, 3);
+    muonHists[den_muphi]  = new TH1F(Form("h_den_%s_muphi",  triggerNames[i].c_str()), Form("Muon phi in %s", triggerNames[i].c_str()), 70, -3.5, 3.5);
 
-    muonHists[num_mupt]   = new TH1F(Form("h_num_%s_mupt",   triggerNames[i].c_str()), "Muon pt",  90, 0, 150);
-    muonHists[num_mueta]  = new TH1F(Form("h_num_%s_mueta",  triggerNames[i].c_str()), "Muon eta", 60, -3, 3);
-    muonHists[num_muphi]  = new TH1F(Form("h_num_%s_muphi",  triggerNames[i].c_str()), "Muon phi", 70, -3.5, 3.5);
+    muonHists[num_mupt]   = new TH1F(Form("h_num_%s_mupt",   triggerNames[i].c_str()), Form("Muon pt in %s",  triggerNames[i].c_str()), 90, 0, 150);
+    muonHists[num_mueta]  = new TH1F(Form("h_num_%s_mueta",  triggerNames[i].c_str()), Form("Muon eta in %s", triggerNames[i].c_str()), 60, -3, 3);
+    muonHists[num_muphi]  = new TH1F(Form("h_num_%s_muphi",  triggerNames[i].c_str()), Form("Muon phi in %s", triggerNames[i].c_str()), 70, -3.5, 3.5);
 
     muonHists[dilep_invm] = new TH1F(Form("h_dilep_%s_invm", triggerNames[i].c_str()), "InvM of the dilepton", 90, 0, 180);
 
@@ -61,7 +61,7 @@ vector< map< histType,TH1F*> > creatMuonHists(vector<string> triggerNames){
   return triggerHists;
 }
 
-inline void writeEfficiencyPlots(map< histType,TH1F*>& histmap, TFile* file){
+inline void writeEfficiencyPlots(map< histType,TH1F*>& histmap, string triggerName, TFile* file){
   for(unsigned int j=0; j<histmap.size(); j++)
     histmap[(histType) j]->Write();
 
@@ -77,9 +77,41 @@ inline void writeEfficiencyPlots(map< histType,TH1F*>& histmap, TFile* file){
   h_eff_mueta->Divide(histmap[den_mueta]);
   h_eff_muphi->Divide(histmap[den_muphi]);
 
+  for (int i=1; i <= h_eff_mupt->GetNbinsX(); i++){
+    float p = h_eff_mupt->GetBinContent(i);
+    if (histmap[den_mupt]->GetBinContent(i) == 0) h_eff_mupt->SetBinError(i, 0);
+    else
+      h_eff_mupt->SetBinError(i, sqrt(p*(1-p)/histmap[den_mupt]->GetBinContent(i)));
+  }
+  for (int i=1; i <= h_eff_mueta->GetNbinsX(); i++){
+    float p = h_eff_mueta->GetBinContent(i);
+    if (histmap[den_mueta]->GetBinContent(i) == 0) h_eff_mueta->SetBinError(i, 0);
+    else
+      h_eff_mueta->SetBinError(i, sqrt(p*(1-p)/histmap[den_mueta]->GetBinContent(i)));
+  }
+  for (int i=1; i <= h_eff_muphi->GetNbinsX(); i++){
+    float p = h_eff_muphi->GetBinContent(i);
+    if (histmap[den_muphi]->GetBinContent(i) == 0) h_eff_muphi->SetBinError(i, 0);
+    else
+      h_eff_muphi->SetBinError(i, sqrt(p*(1-p)/histmap[den_muphi]->GetBinContent(i)));
+  }
+
+  h_eff_mupt->SetTitle(Form("%s efficiency in muon p_{T}", triggerName.c_str()));
+  h_eff_mupt->GetXaxis()->SetTitle("p_{T}");
+  h_eff_mupt->GetYaxis()->SetRangeUser(0, 1);
+
+  h_eff_mueta->SetTitle(Form("%s efficiency in muon eta", triggerName.c_str()));
+  h_eff_mueta->GetXaxis()->SetTitle("eta");
+  h_eff_mueta->GetYaxis()->SetRangeUser(0, 1);
+
+  h_eff_muphi->SetTitle(Form("%s efficiency in muon phi", triggerName.c_str()));
+  h_eff_muphi->GetXaxis()->SetTitle("phi");
+  h_eff_muphi->GetYaxis()->SetRangeUser(0, 1);
+
   h_eff_mupt ->Write();
   h_eff_mueta->Write();
   h_eff_muphi->Write();
+
 }
 
 vector<TBranch*> setupTriggerBranches(vector<string> triggerNames, TTree* tree){
@@ -121,22 +153,28 @@ inline int getTriggerValue(TBranch* trig_branch, int event){
   return trig_value;
 }
 
-inline void fillTagMuonHists(map< histType,TH1F* >& histmap){
+inline void fillTagMuonHists(map< histType,TH1F* >& histmap, float ptcut = 30){
   Fill1F(histmap[tag_mupt], tag_p4().pt());
-  Fill1F(histmap[tag_mueta], tag_p4().eta());
-  Fill1F(histmap[tag_muphi], tag_p4().phi());
+  if (tag_p4().pt() > ptcut){
+    Fill1F(histmap[tag_mueta], tag_p4().eta());
+    Fill1F(histmap[tag_muphi], tag_p4().phi());
+  }
 }
 
-inline void fillProbeMuonHists(map< histType,TH1F* >& histmap, TBranch* trig_branch, int event){
+inline void fillProbeMuonHists(map< histType,TH1F* >& histmap, TBranch* trig_branch, int event, float ptcut = 30){
   Fill1F(histmap[den_mupt], p4().pt());
-  Fill1F(histmap[den_mueta], p4().eta());
-  Fill1F(histmap[den_muphi], p4().phi());
+  if (p4().pt() > ptcut){
+    Fill1F(histmap[den_mueta], p4().eta());
+    Fill1F(histmap[den_muphi], p4().phi());
+    Fill1F(histmap[dilep_invm], dilep_mass());
+  }
   if (getTriggerValue(trig_branch, event) > 0){
     Fill1F(histmap[num_mupt], p4().pt());
-    Fill1F(histmap[num_mueta], p4().eta());
-    Fill1F(histmap[num_muphi], p4().phi());
+    if (p4().pt() > ptcut){
+      Fill1F(histmap[num_mueta], p4().eta());
+      Fill1F(histmap[num_muphi], p4().phi());
+    }
   }
-  Fill1F(histmap[dilep_invm], dilep_mass());
 }
 
 int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFilePrefix = "test") {
@@ -218,8 +256,10 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
       // --- New Tag & Probe ---
       if (abs(id()) != 13) continue;
       for (unsigned int i=0; i<triggerNames.size(); i++){
+
         if (getTriggerValue(tagTrigBranches[i], event) > 0)
           fillTagMuonHists(muonHists[i]);
+
         if (fabs(p4().eta()) < 2.4 && RelIso03EA() < 0.15 && passes_POG_mediumID())
           fillProbeMuonHists(muonHists[i], trigBranches[i], event);
       }
@@ -241,7 +281,7 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
   for(unsigned int i=0; i<triggerNames.size(); i++){
     TDirectory * dir = (TDirectory*) outfile->mkdir(triggerNames[i].c_str());
     dir->cd();
-    writeEfficiencyPlots(muonHists[i], outfile);
+    writeEfficiencyPlots(muonHists[i], triggerNames[i], outfile);
   }
 
   h_muonCount->Write();
