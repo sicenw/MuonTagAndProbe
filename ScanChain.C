@@ -15,6 +15,7 @@
 #include "TTreeCache.h"
 #include "TH1F.h"
 #include "TH2F.h"
+#include "TEfficiency.h"
 
 // LepTree
 #include "LepTree.cc"
@@ -69,9 +70,9 @@ inline void writeEfficiencyPlots(map< histType,TH1F*>& histmap, string triggerNa
   TH1F *h_eff_mueta = (TH1F*) histmap[num_mueta]->Clone();
   TH1F *h_eff_muphi = (TH1F*) histmap[num_muphi]->Clone();
 
-  h_eff_mupt ->SetName(string(h_eff_mupt ->GetName()).replace(2, 5, "eff").c_str());
-  h_eff_mueta->SetName(string(h_eff_mueta->GetName()).replace(2, 5, "eff").c_str());
-  h_eff_muphi->SetName(string(h_eff_muphi->GetName()).replace(2, 5, "eff").c_str());
+  h_eff_mupt ->SetName(string(h_eff_mupt ->GetName()).replace(2, 3, "eff").c_str());
+  h_eff_mueta->SetName(string(h_eff_mueta->GetName()).replace(2, 3, "eff").c_str());
+  h_eff_muphi->SetName(string(h_eff_muphi->GetName()).replace(2, 3, "eff").c_str());
 
   h_eff_mupt ->Divide(histmap[den_mupt]);
   h_eff_mueta->Divide(histmap[den_mueta]);
@@ -112,6 +113,26 @@ inline void writeEfficiencyPlots(map< histType,TH1F*>& histmap, string triggerNa
   h_eff_mueta->Write();
   h_eff_muphi->Write();
 
+  // Try the TEfficiency class
+  TEfficiency* eff_mupt  = new TEfficiency(*histmap[num_mupt] , *histmap[den_mupt] );
+  TEfficiency* eff_mueta = new TEfficiency(*histmap[num_mueta], *histmap[den_mueta]);
+  TEfficiency* eff_muphi = new TEfficiency(*histmap[num_muphi], *histmap[den_muphi]);
+
+  eff_mupt->SetTitle(Form("%s efficiency in muon p_{T}", triggerName.c_str()));
+  eff_mupt->SetLineColor(kAzure+7);
+  eff_mupt->SetMarkerColor(kAzure+7);
+
+  eff_mueta->SetTitle(Form("%s efficiency in muon eta", triggerName.c_str()));
+  eff_mueta->SetLineColor(kAzure+7);
+  eff_mueta->SetMarkerColor(kAzure+7);
+
+  eff_muphi->SetTitle(Form("%s efficiency in muon phi", triggerName.c_str()));
+  eff_muphi->SetLineColor(kAzure+7);
+  eff_muphi->SetMarkerColor(kAzure+7);
+
+  eff_mupt ->Write();
+  eff_mueta->Write();
+  eff_muphi->Write();
 }
 
 vector<TBranch*> setupTriggerBranches(vector<string> triggerNames, TTree* tree){
