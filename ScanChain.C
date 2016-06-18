@@ -313,7 +313,7 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
 
         if (RelIso03EA() < 0.1) {
           fillDenMuonHists(muonHists2[i], triggerPtCuts[i]);
-          if (passes_POG_mediumID())
+          if (passes_POG_tightID())
             fillNumMuonHists(muonHists2[i], triggerPtCuts[i]);
         }
 
