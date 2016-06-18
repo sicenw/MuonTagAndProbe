@@ -34,7 +34,7 @@ void Fill1F(TH1F *&hist, double x, double w = 1)
 
 enum histType {tag_mupt, tag_mueta, tag_muphi, den_mupt, den_mueta, den_muphi, num_mupt, num_mueta, num_muphi, dilep_invm};
 
-vector< map< histType,TH1F*> > creatMuonHists(vector<string> triggerNames){
+vector< map< histType,TH1F*> > creatMuonHists(vector<string> triggerNames, string suffix = ""){
 
   vector< map< histType,TH1F*> > triggerHists;
 
@@ -42,19 +42,19 @@ vector< map< histType,TH1F*> > creatMuonHists(vector<string> triggerNames){
 
     map<histType, TH1F*> muonHists;
 
-    muonHists[tag_mupt]   = new TH1F(Form("h_tag_%s_mupt",   triggerNames[i].c_str()), Form("Muon pt in tag_%s",  triggerNames[i].c_str()), 90, 0, 150);
-    muonHists[tag_mueta]  = new TH1F(Form("h_tag_%s_mueta",  triggerNames[i].c_str()), Form("Muon eta in tag_%s", triggerNames[i].c_str()), 60, -3, 3);
-    muonHists[tag_muphi]  = new TH1F(Form("h_tag_%s_muphi",  triggerNames[i].c_str()), Form("Muon phi in tag_%s", triggerNames[i].c_str()), 70, -3.5, 3.5);
+    muonHists[tag_mupt]   = new TH1F(Form("h_tag_%s_mupt%s",   triggerNames[i].c_str(), suffix.c_str()), Form("Muon pt in tag_%s",  triggerNames[i].c_str()), 90, 0, 250);
+    muonHists[tag_mueta]  = new TH1F(Form("h_tag_%s_mueta%s",  triggerNames[i].c_str(), suffix.c_str()), Form("Muon eta in tag_%s", triggerNames[i].c_str()), 60, -3, 3);
+    muonHists[tag_muphi]  = new TH1F(Form("h_tag_%s_muphi%s",  triggerNames[i].c_str(), suffix.c_str()), Form("Muon phi in tag_%s", triggerNames[i].c_str()), 70, -3.5, 3.5);
 
-    muonHists[den_mupt]   = new TH1F(Form("h_den_%s_mupt",   triggerNames[i].c_str()), Form("Muon pt in %s",  triggerNames[i].c_str()), 90, 0, 150);
-    muonHists[den_mueta]  = new TH1F(Form("h_den_%s_mueta",  triggerNames[i].c_str()), Form("Muon eta in %s", triggerNames[i].c_str()), 60, -3, 3);
-    muonHists[den_muphi]  = new TH1F(Form("h_den_%s_muphi",  triggerNames[i].c_str()), Form("Muon phi in %s", triggerNames[i].c_str()), 70, -3.5, 3.5);
+    muonHists[den_mupt]   = new TH1F(Form("h_den_%s_mupt%s",   triggerNames[i].c_str(), suffix.c_str()), Form("Muon pt in %s",  triggerNames[i].c_str()), 90, 0, 250);
+    muonHists[den_mueta]  = new TH1F(Form("h_den_%s_mueta%s",  triggerNames[i].c_str(), suffix.c_str()), Form("Muon eta in %s", triggerNames[i].c_str()), 60, -3, 3);
+    muonHists[den_muphi]  = new TH1F(Form("h_den_%s_muphi%s",  triggerNames[i].c_str(), suffix.c_str()), Form("Muon phi in %s", triggerNames[i].c_str()), 70, -3.5, 3.5);
 
-    muonHists[num_mupt]   = new TH1F(Form("h_num_%s_mupt",   triggerNames[i].c_str()), Form("Muon pt in %s",  triggerNames[i].c_str()), 90, 0, 150);
-    muonHists[num_mueta]  = new TH1F(Form("h_num_%s_mueta",  triggerNames[i].c_str()), Form("Muon eta in %s", triggerNames[i].c_str()), 60, -3, 3);
-    muonHists[num_muphi]  = new TH1F(Form("h_num_%s_muphi",  triggerNames[i].c_str()), Form("Muon phi in %s", triggerNames[i].c_str()), 70, -3.5, 3.5);
+    muonHists[num_mupt]   = new TH1F(Form("h_num_%s_mupt%s",   triggerNames[i].c_str(), suffix.c_str()), Form("Muon pt in %s",  triggerNames[i].c_str()), 90, 0, 250);
+    muonHists[num_mueta]  = new TH1F(Form("h_num_%s_mueta%s",  triggerNames[i].c_str(), suffix.c_str()), Form("Muon eta in %s", triggerNames[i].c_str()), 60, -3, 3);
+    muonHists[num_muphi]  = new TH1F(Form("h_num_%s_muphi%s",  triggerNames[i].c_str(), suffix.c_str()), Form("Muon phi in %s", triggerNames[i].c_str()), 70, -3.5, 3.5);
 
-    muonHists[dilep_invm] = new TH1F(Form("h_dilep_%s_invm", triggerNames[i].c_str()), Form("InvM of the dilepton in %s", triggerNames[i].c_str()), 90, 0, 180);
+    muonHists[dilep_invm] = new TH1F(Form("h_dilep_%s_invm%s", triggerNames[i].c_str(), suffix.c_str()), Form("InvM of the dilepton in %s", triggerNames[i].c_str()), 90, 0, 180);
 
     triggerHists.push_back(muonHists);
   }
@@ -182,20 +182,27 @@ inline void fillTagMuonHists(map< histType,TH1F* >& histmap, float ptcut = 30){
   }
 }
 
-inline void fillProbeMuonHists(map< histType,TH1F* >& histmap, TBranch* trig_branch, int event, float ptcut = 30){
+inline void fillDenMuonHists(map< histType,TH1F* >& histmap, float ptcut = 30){
   Fill1F(histmap[den_mupt], p4().pt());
   if (p4().pt() > ptcut){
     Fill1F(histmap[den_mueta], p4().eta());
     Fill1F(histmap[den_muphi], p4().phi());
     Fill1F(histmap[dilep_invm], dilep_mass());
   }
-  if (getTriggerValue(trig_branch, event) > 0){
-    Fill1F(histmap[num_mupt], p4().pt());
-    if (p4().pt() > ptcut){
-      Fill1F(histmap[num_mueta], p4().eta());
-      Fill1F(histmap[num_muphi], p4().phi());
-    }
+}
+
+inline void fillNumMuonHists(map< histType,TH1F* >& histmap, float ptcut = 30){
+  Fill1F(histmap[num_mupt], p4().pt());
+  if (p4().pt() > ptcut){
+    Fill1F(histmap[num_mueta], p4().eta());
+    Fill1F(histmap[num_muphi], p4().phi());
   }
+}
+
+inline void fillProbeMuonHists(map< histType,TH1F* >& histmap, TBranch* trig_branch, int event, float ptcut = 30){
+  fillDenMuonHists(histmap, ptcut);
+  if (getTriggerValue(trig_branch, event) > 0)
+    fillNumMuonHists(histmap, ptcut);
 }
 
 int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFilePrefix = "test") {
@@ -222,7 +229,9 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
   triggerPtCuts[2] = 25;
   triggerPtCuts[3] = 25;
 
-  vector< map< histType,TH1F*> > muonHists = creatMuonHists(triggerNames);
+  vector< map< histType,TH1F*> > muonHists1 = creatMuonHists(triggerNames, "_1");
+  vector< map< histType,TH1F*> > muonHists2 = creatMuonHists(triggerNames, "_2");
+  vector< map< histType,TH1F*> > muonHists3 = creatMuonHists(triggerNames, "_3");
 
   // Loop over events to Analyze
   unsigned int nEventsTotal = 0;
@@ -278,14 +287,39 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
 
       // --- New Tag & Probe ---
       if (abs(id()) != 13) continue;
+      if (p4().pt() < 15) continue;
+      if (fabs(p4().eta()) > 2.4 ) continue;
+      if (charge()*tag_charge() > 0) continue;
+      if (tag_p4().pt() < 25) continue;
+      if (tag_RelIso03EA() > 0.1) continue;
+      ++nMuonCount;
+      // if (nMuonCount > 2) continue;
+
       for (unsigned int i=0; i<triggerNames.size(); i++){
+        if (getTriggerValue(tagTrigBranches[i], event) <= 0) continue;
 
-        if (getTriggerValue(tagTrigBranches[i], event) > 0)
-          fillTagMuonHists(muonHists[i], triggerPtCuts[i]);
+        fillTagMuonHists(muonHists1[i], triggerPtCuts[i]);
+        fillTagMuonHists(muonHists2[i], triggerPtCuts[i]);
+        fillTagMuonHists(muonHists3[i], triggerPtCuts[i]);
 
-        if (fabs(p4().eta()) < 2.4 && RelIso03EA() < 0.15 && passes_POG_mediumID())
-          fillProbeMuonHists(muonHists[i], trigBranches[i], event, triggerPtCuts[i]);
+        fillDenMuonHists(muonHists1[i], triggerPtCuts[i]);
+        if (RelIso03EA() < 0.1 && passes_POG_tightID())
+          fillNumMuonHists(muonHists1[i], triggerPtCuts[i]);
+
+        if (RelIso03EA() < 0.1) {
+          fillDenMuonHists(muonHists2[i], triggerPtCuts[i]);
+          if (passes_POG_mediumID())
+            fillNumMuonHists(muonHists2[i], triggerPtCuts[i]);
+        }
+
+        if (passes_POG_tightID()) {
+          fillDenMuonHists(muonHists3[i], triggerPtCuts[i]);
+          if (RelIso03EA() < 0.1)
+            fillNumMuonHists(muonHists3[i], triggerPtCuts[i]);
+        }
       }
+
+      // End of Analysis Code
     }
 
     // Clean Up
@@ -304,7 +338,15 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
   for(unsigned int i=0; i<triggerNames.size(); i++){
     TDirectory * dir = (TDirectory*) outfile->mkdir(triggerNames[i].c_str());
     dir->cd();
-    writeEfficiencyPlots(muonHists[i], triggerNames[i], outfile);
+    TDirectory * dir2 = (TDirectory*) dir->mkdir("1");
+    dir2->cd();
+    writeEfficiencyPlots(muonHists1[i], triggerNames[i], outfile);
+    dir2 = (TDirectory*) dir->mkdir("2");
+    dir2->cd();
+    writeEfficiencyPlots(muonHists2[i], triggerNames[i], outfile);
+    dir2 = (TDirectory*) dir->mkdir("3");
+    dir2->cd();
+    writeEfficiencyPlots(muonHists3[i], triggerNames[i], outfile);
   }
 
   h_muonCount->Write();

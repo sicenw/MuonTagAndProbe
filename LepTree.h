@@ -1,6 +1,6 @@
 // -*- C++ -*-
 // This is a header file generated with the command:
-// makeCMS3ClassFiles("/nfs-7/userdata/leptonTree/v2.00TP/2016SingleMu273017.root", "t", "LepTree", "lepTree", "t")
+// makeCMS3ClassFiles("/home/users/sicheng/working/leptree/2016SingleMu.root", "t", "LepTree", "lepTree", "t")
 
 #ifndef LepTree_H
 #define LepTree_H
