@@ -32,7 +32,7 @@ void Fill1F(TH1F *&hist, double x, double w = 1)
   hist->Fill(x, w);
 }
 
-enum histType {tag_mupt, tag_mueta, tag_muphi, den_mupt, den_mueta, den_muphi, num_mupt, num_mueta, num_muphi, dilep_invm};
+enum histType {tag_mupt, tag_mueta, tag_muphi, den_mupt, den_mueta, den_muphi, num_mupt, num_mueta, num_muphi, den_invm, num_invm};
 
 vector< map< histType,TH1F*> > creatMuonHists(vector<string> triggerNames, string suffix = ""){
 
@@ -54,7 +54,8 @@ vector< map< histType,TH1F*> > creatMuonHists(vector<string> triggerNames, strin
     muonHists[num_mueta]  = new TH1F(Form("h_num_%s_mueta%s",  triggerNames[i].c_str(), suffix.c_str()), Form("Muon eta in %s", triggerNames[i].c_str()), 60, -3, 3);
     muonHists[num_muphi]  = new TH1F(Form("h_num_%s_muphi%s",  triggerNames[i].c_str(), suffix.c_str()), Form("Muon phi in %s", triggerNames[i].c_str()), 70, -3.5, 3.5);
 
-    muonHists[dilep_invm] = new TH1F(Form("h_dilep_%s_invm%s", triggerNames[i].c_str(), suffix.c_str()), Form("InvM of the dilepton in %s", triggerNames[i].c_str()), 90, 0, 180);
+    muonHists[den_invm] = new TH1F(Form("h_den_%s_invm%s", triggerNames[i].c_str(), suffix.c_str()), Form("InvM of the dilepton in %s", triggerNames[i].c_str()), 90, 0, 180);
+    muonHists[num_invm] = new TH1F(Form("h_num_%s_invm%s", triggerNames[i].c_str(), suffix.c_str()), Form("InvM of the dilepton in %s", triggerNames[i].c_str()), 90, 0, 180);
 
     triggerHists.push_back(muonHists);
   }
@@ -187,7 +188,7 @@ inline void fillDenMuonHists(map< histType,TH1F* >& histmap, float ptcut = 30){
   if (p4().pt() > ptcut){
     Fill1F(histmap[den_mueta], p4().eta());
     Fill1F(histmap[den_muphi], p4().phi());
-    Fill1F(histmap[dilep_invm], dilep_mass());
+    Fill1F(histmap[den_invm], dilep_mass());
   }
 }
 
@@ -196,6 +197,7 @@ inline void fillNumMuonHists(map< histType,TH1F* >& histmap, float ptcut = 30){
   if (p4().pt() > ptcut){
     Fill1F(histmap[num_mueta], p4().eta());
     Fill1F(histmap[num_muphi], p4().phi());
+    Fill1F(histmap[num_invm], dilep_mass());
   }
 }
 
@@ -262,9 +264,9 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
     vector<TBranch*> tagTrigBranches = setupTagTriggerBranches(triggerNames, tree);
 
     // Loop over Events in current file
-    if( nEventsTotal >= nEventsChain ) continue;
+    if (nEventsTotal >= nEventsChain) continue;
     unsigned int nEventsTree = tree->GetEntriesFast();
-    for( unsigned int event = 0; event < nEventsTree; ++event) {
+    for (unsigned int event = 0; event < nEventsTree; ++event) {
 
       // Get Event Content
       if( nEventsTotal >= nEventsChain ) continue;
@@ -293,6 +295,8 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
       if (charge()*tag_charge() > 0) continue;
       if (tag_p4().pt() < 25) continue;
       if (tag_RelIso03EA() > 0.1) continue;
+      if (dilep_mass() < 75 || dilep_mass() > 105) continue;
+
       ++nMuonCount;
       // if (nMuonCount > 2) continue;
 
@@ -340,7 +344,7 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
 
   TFile* outfile = new TFile("hists.root", "RECREATE");
 
-  for(unsigned int i=0; i<triggerNames.size(); i++){
+  for (unsigned int i=0; i<triggerNames.size(); i++) {
     TDirectory * dir = (TDirectory*) outfile->mkdir(triggerNames[i].c_str());
     dir->cd();
     TDirectory * dir2 = (TDirectory*) dir->mkdir("trigeff");
