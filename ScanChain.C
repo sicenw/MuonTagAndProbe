@@ -229,6 +229,7 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
   triggerPtCuts[2] = 25;
   triggerPtCuts[3] = 25;
 
+  vector< map< histType,TH1F*> > muonHists = creatMuonHists(triggerNames);
   vector< map< histType,TH1F*> > muonHists1 = creatMuonHists(triggerNames, "_1");
   vector< map< histType,TH1F*> > muonHists2 = creatMuonHists(triggerNames, "_2");
   vector< map< histType,TH1F*> > muonHists3 = creatMuonHists(triggerNames, "_3");
@@ -298,6 +299,10 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
       for (unsigned int i=0; i<triggerNames.size(); i++){
         if (getTriggerValue(tagTrigBranches[i], event) <= 0) continue;
 
+        fillTagMuonHists(muonHists[i],  triggerPtCuts[i]);
+        if (RelIso03EA() < 0.15 && passes_POG_tightID())
+          fillProbeMuonHists(muonHists[i], trigBranches[i], event, triggerPtCuts[i]);
+
         fillTagMuonHists(muonHists1[i], triggerPtCuts[i]);
         fillTagMuonHists(muonHists2[i], triggerPtCuts[i]);
         fillTagMuonHists(muonHists3[i], triggerPtCuts[i]);
@@ -338,7 +343,10 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
   for(unsigned int i=0; i<triggerNames.size(); i++){
     TDirectory * dir = (TDirectory*) outfile->mkdir(triggerNames[i].c_str());
     dir->cd();
-    TDirectory * dir2 = (TDirectory*) dir->mkdir("1");
+    TDirectory * dir2 = (TDirectory*) dir->mkdir("original");
+    dir2->cd();
+    writeEfficiencyPlots(muonHists[i], triggerNames[i], outfile);
+    dir2 = (TDirectory*) dir->mkdir("1");
     dir2->cd();
     writeEfficiencyPlots(muonHists1[i], triggerNames[i], outfile);
     dir2 = (TDirectory*) dir->mkdir("2");
