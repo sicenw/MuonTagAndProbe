@@ -343,16 +343,16 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
   for(unsigned int i=0; i<triggerNames.size(); i++){
     TDirectory * dir = (TDirectory*) outfile->mkdir(triggerNames[i].c_str());
     dir->cd();
-    TDirectory * dir2 = (TDirectory*) dir->mkdir("original");
+    TDirectory * dir2 = (TDirectory*) dir->mkdir("trigeff");
     dir2->cd();
     writeEfficiencyPlots(muonHists[i], triggerNames[i], outfile);
-    dir2 = (TDirectory*) dir->mkdir("1");
+    dir2 = (TDirectory*) dir->mkdir("1.ID+ISO");
     dir2->cd();
     writeEfficiencyPlots(muonHists1[i], triggerNames[i], outfile);
-    dir2 = (TDirectory*) dir->mkdir("2");
+    dir2 = (TDirectory*) dir->mkdir("2.ID");
     dir2->cd();
     writeEfficiencyPlots(muonHists2[i], triggerNames[i], outfile);
-    dir2 = (TDirectory*) dir->mkdir("3");
+    dir2 = (TDirectory*) dir->mkdir("3.ISO");
     dir2->cd();
     writeEfficiencyPlots(muonHists3[i], triggerNames[i], outfile);
   }
