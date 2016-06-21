@@ -352,13 +352,13 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
     TDirectory * dir2 = (TDirectory*) dir->mkdir("trigeff");
     dir2->cd();
     writeEfficiencyPlots(muonHists[i], triggerNames[i], outfile);
-    dir2 = (TDirectory*) dir->mkdir("1.ID+ISO");
+    dir2 = (TDirectory*) dir->mkdir("ID+ISO");
     dir2->cd();
     writeEfficiencyPlots(muonHists1[i], triggerNames[i], outfile);
-    dir2 = (TDirectory*) dir->mkdir("2.ID");
+    dir2 = (TDirectory*) dir->mkdir("ID");
     dir2->cd();
     writeEfficiencyPlots(muonHists2[i], triggerNames[i], outfile);
-    dir2 = (TDirectory*) dir->mkdir("3.ISO");
+    dir2 = (TDirectory*) dir->mkdir("ISO");
     dir2->cd();
     writeEfficiencyPlots(muonHists3[i], triggerNames[i], outfile);
   }
