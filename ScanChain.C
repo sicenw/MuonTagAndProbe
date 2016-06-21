@@ -100,15 +100,15 @@ inline void writeEfficiencyPlots(map< histType,TH1F*>& histmap, string triggerNa
 
   h_eff_mupt->SetTitle(Form("%s efficiency in muon p_{T}", triggerName.c_str()));
   h_eff_mupt->GetXaxis()->SetTitle("p_{T}");
-  h_eff_mupt->GetYaxis()->SetRangeUser(0, 1);
+  h_eff_mupt->GetYaxis()->SetRangeUser(0, 1.1);
 
   h_eff_mueta->SetTitle(Form("%s efficiency in muon eta", triggerName.c_str()));
   h_eff_mueta->GetXaxis()->SetTitle("eta");
-  h_eff_mueta->GetYaxis()->SetRangeUser(0, 1);
+  h_eff_mueta->GetYaxis()->SetRangeUser(0, 1.1);
 
   h_eff_muphi->SetTitle(Form("%s efficiency in muon phi", triggerName.c_str()));
   h_eff_muphi->GetXaxis()->SetTitle("phi");
-  h_eff_muphi->GetYaxis()->SetRangeUser(0, 1);
+  h_eff_muphi->GetYaxis()->SetRangeUser(0, 1.1);
 
   h_eff_mupt ->Write();
   h_eff_mueta->Write();
@@ -225,6 +225,7 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
   triggerNames.push_back("HLT_IsoTkMu24");
   triggerNames.push_back("HLT_IsoMu20");
   triggerNames.push_back("HLT_IsoTkMu20");
+  // triggerNames.push_back("HLT_Ele27_eta2p1_WPLoose_Gsf");
 
   // Separate vector to store the pt cut to be used for eta and phi
   vector<float> triggerPtCuts(triggerNames.size(), 30);
