@@ -297,6 +297,7 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
       if (tag_p4().pt() < 25) continue;
       if (tag_RelIso03EA() > 0.1) continue;
       if (dilep_mass() < 75 || dilep_mass() > 105) continue;
+      if (!pid_PFMuon()) continue;
 
       ++nMuonCount;
       // if (nMuonCount > 2) continue;
