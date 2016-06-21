@@ -280,7 +280,7 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
 
       // Analysis Code
 
-      if (evt_run() < 273423) continue;    // Get runs after fixing the L1 interface problem
+      if (evt_isRealData() && evt_run() < 273423) continue;  // Get runs after fixing the L1 interface problem
 
       int nevt = evt_event();
       if (nevt != evt_num) {
