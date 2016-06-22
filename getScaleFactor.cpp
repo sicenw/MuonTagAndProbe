@@ -22,9 +22,9 @@ vector<TH1F*> getEfficiencyPlot(TFile* file1, TFile* file2, string triggerName, 
   TH1F* eff_mueta = (TH1F*) num_mueta->Clone();
   TH1F* eff_muphi = (TH1F*) num_muphi->Clone();
 
-  eff_mupt ->SetName("scale_mupt");
-  eff_mueta->SetName("scale_mueta");
-  eff_muphi->SetName("scale_muphi");
+  eff_mupt ->SetName(Form("%s_scale_mupt", dirName.c_str()));
+  eff_mueta->SetName(Form("%s_scale_mueta", dirName.c_str()));
+  eff_muphi->SetName(Form("%s_scale_muphi", dirName.c_str()));
 
   eff_mupt ->Divide(den_mupt);
   eff_mueta->Divide(den_mueta);
@@ -39,29 +39,30 @@ vector<TH1F*> getEfficiencyPlot(TFile* file1, TFile* file2, string triggerName, 
   for (int i=1; i <= eff_muphi->GetNbinsX(); i++)
     eff_muphi->SetBinError(i, num_muphi->GetBinError(i));
 
+  string titleTemp = dirName + " eff scale in " + triggerName;
+  float tot_scale = num_mupt->Integral()/den_mupt->Integral();
+  eff_mupt->SetTitle(Form("%s (tot. %.3f) in p_{T}", titleTemp.c_str(), tot_scale));
+  eff_mupt->GetXaxis()->SetTitle("p_{T}");
+  eff_mupt->GetYaxis()->SetRangeUser(0, 1.1);
+  tot_scale = num_mueta->Integral()/den_mueta->Integral();
+  eff_mueta->SetTitle(Form("%s (tot. %.3f) in eta", titleTemp.c_str(), tot_scale));
+  eff_mueta->GetXaxis()->SetTitle("eta");
+  eff_mueta->GetYaxis()->SetRangeUser(0, 1.1);
+  tot_scale = num_muphi->Integral()/den_muphi->Integral();
+  eff_muphi->SetTitle(Form("%s (tot. %.3f) in phi", titleTemp.c_str(), tot_scale));
+  eff_muphi->GetXaxis()->SetTitle("phi");
+  eff_muphi->GetYaxis()->SetRangeUser(0, 1.1);
+
   if (drawPlots) {
     TCanvas* c1 = new TCanvas;
     gStyle->SetOptStat(0);
 
-    string titleTemp = dirName + " eff scale in " + triggerName;
-    float tot_scale = num_mupt->Integral()/den_mupt->Integral();
-    eff_mupt->SetTitle(Form("%s (tot. %.3f) in p_{T}", titleTemp.c_str(), tot_scale));
-    eff_mupt->GetXaxis()->SetTitle("p_{T}");
-    eff_mupt->GetYaxis()->SetRangeUser(0, 1.1);
     eff_mupt->Draw("PE");
     c1->SaveAs(Form("plot/%s_%s_scale_mupt.pdf", triggerName.c_str(), dirName.c_str()));
     c1->Clear();
-    tot_scale = num_mueta->Integral()/den_mueta->Integral();
-    eff_mueta->SetTitle(Form("%s (tot. %.3f) in eta", titleTemp.c_str(), tot_scale));
-    eff_mueta->GetXaxis()->SetTitle("eta");
-    eff_mueta->GetYaxis()->SetRangeUser(0, 1.1);
     eff_mueta->Draw("PE");
     c1->SaveAs(Form("plot/%s_%s_scale_mueta.pdf", triggerName.c_str(), dirName.c_str()));
     c1->Clear();
-    tot_scale = num_muphi->Integral()/den_muphi->Integral();
-    eff_muphi->SetTitle(Form("%s (tot. %.3f) in phi", titleTemp.c_str(), tot_scale));
-    eff_muphi->GetXaxis()->SetTitle("phi");
-    eff_muphi->GetYaxis()->SetRangeUser(0, 1.1);
     eff_muphi->Draw("PE");
     c1->SaveAs(Form("plot/%s_%s_scale_muphi.pdf", triggerName.c_str(), dirName.c_str()));
     c1->Close();
@@ -79,17 +80,27 @@ int getScaleFactor()
   TFile* f_data = new TFile("hists/hists_2fb.root");
   TFile* f_mcdy = new TFile("hists/hists_DY2.00TP.root");
 
-  getEfficiencyPlot(f_data, f_mcdy, "HLT_IsoMu20",   "trigeff");
-  getEfficiencyPlot(f_data, f_mcdy, "HLT_IsoTkMu20", "trigeff");
+  vector<string> triggerNames{"HLT_IsoMu20", "HLT_IsoTkMu20"};
+  vector<string> dirNames{"trigeff", "ID+ISO", "ID", "ISO"};
+  vector<string> suffixs{"", "_1", "_2", "_3"};
 
-  getEfficiencyPlot(f_data, f_mcdy, "HLT_IsoMu20",   "ID+ISO", "_1");
-  getEfficiencyPlot(f_data, f_mcdy, "HLT_IsoTkMu20", "ID+ISO", "_1");
+  TFile* outfile; 
+  bool outputHists = false;
+  if (outputHists) outfile = new TFile("hists/eff_scalings.root", "RECREATE");
 
-  getEfficiencyPlot(f_data, f_mcdy, "HLT_IsoMu20",   "ID", "_2");
-  getEfficiencyPlot(f_data, f_mcdy, "HLT_IsoTkMu20", "ID", "_2");
+  for (unsigned int i = 0; i < triggerNames.size(); ++i) {
+    for (unsigned int j = 0; j < dirNames.size(); ++j) {
+      vector<TH1F*> hScales = getEfficiencyPlot(f_data, f_mcdy, triggerNames[i], dirNames[j], suffixs[j], false);
 
-  getEfficiencyPlot(f_data, f_mcdy, "HLT_IsoMu20",   "ISO", "_3");
-  getEfficiencyPlot(f_data, f_mcdy, "HLT_IsoTkMu20", "ISO", "_3");
+      if (outputHists) {
+        TDirectory* dir = (TDirectory*) outfile->Get(triggerNames[i].c_str());
+        if (dir == 0) dir = (TDirectory*) outfile->mkdir(triggerNames[i].c_str());
+        dir->cd();
+        for (auto it = hScales.begin(); it != hScales.end(); ++it)
+          (*it)->Write();
+      }
+    }
+  }
 
   return 0;
 }
