@@ -57,14 +57,53 @@ vector<TH1F*> getEfficiencyPlot(TFile* file1, TFile* file2, string triggerName, 
     TCanvas* c1 = new TCanvas;
     gStyle->SetOptStat(0);
 
+    TLegend* leg = new TLegend(0.55,0.17,0.75,0.37);
+    eff_mupt->SetLineColor(kGreen);
+    eff_mupt->SetMarkerColor(kGreen);
+    num_mupt->SetLineColor(kBlue);
+    num_mupt->SetMarkerColor(kBlue);
+    den_mupt->SetLineColor(kRed);
+    den_mupt->SetMarkerColor(kRed);
+    leg->AddEntry(eff_mupt, "data/MC");
+    leg->AddEntry(num_mupt, "data");
+    leg->AddEntry(den_mupt, "MC");
     eff_mupt->Draw("PE");
+    num_mupt->Draw("PEsame");
+    den_mupt->Draw("PEsame");
+    leg->Draw("same");
     c1->SaveAs(Form("plot/%s_%s_scale_mupt.pdf", triggerName.c_str(), dirName.c_str()));
     c1->Clear();
+    eff_mueta->SetLineColor(kGreen);
+    eff_mueta->SetMarkerColor(kGreen);
+    num_mueta->SetLineColor(kBlue);
+    num_mueta->SetMarkerColor(kBlue);
+    den_mueta->SetLineColor(kRed);
+    den_mueta->SetMarkerColor(kRed);
+    leg->Clear();
+    leg->AddEntry(eff_mueta, "data/MC");
+    leg->AddEntry(num_mueta, "data");
+    leg->AddEntry(den_mueta, "MC");
     eff_mueta->Draw("PE");
+    num_mueta->Draw("PEsame");
+    den_mueta->Draw("PEsame");
+    leg->Draw("same");
     c1->SaveAs(Form("plot/%s_%s_scale_mueta.pdf", triggerName.c_str(), dirName.c_str()));
     c1->Clear();
-    eff_muphi->Draw("PE");
-    c1->SaveAs(Form("plot/%s_%s_scale_muphi.pdf", triggerName.c_str(), dirName.c_str()));
+    // eff_muphi->SetLineColor(kGreen);
+    // eff_muphi->SetMarkerColor(kGreen);
+    // num_muphi->SetLineColor(kBlue);
+    // num_muphi->SetMarkerColor(kBlue);
+    // den_muphi->SetLineColor(kRed);
+    // den_muphi->SetMarkerColor(kRed);
+    // leg->Clear();
+    // leg->AddEntry(eff_muphi, "data/MC");
+    // leg->AddEntry(num_muphi, "data");
+    // leg->AddEntry(den_muphi, "MC");
+    // eff_muphi->Draw("PE");
+    // num_muphi->Draw("PEsame");
+    // den_muphi->Draw("PEsame");
+    // leg->Draw("same");
+    // c1->SaveAs(Form("plot/%s_%s_scale_muphi.pdf", triggerName.c_str(), dirName.c_str()));
     c1->Close();
   }
 
@@ -80,9 +119,12 @@ int getScaleFactor()
   TFile* f_data = new TFile("hists/hists_2fb.root");
   TFile* f_mcdy = new TFile("hists/hists_DY2.00TP.root");
 
-  vector<string> triggerNames{"HLT_IsoMu20", "HLT_IsoTkMu20"};
-  vector<string> dirNames{"trigeff", "ID+ISO", "ID", "ISO"};
-  vector<string> suffixs{"", "_1", "_2", "_3"};
+  // vector<string> triggerNames{"HLT_IsoMu20", "HLT_IsoTkMu20"};
+  // vector<string> dirNames{"trigeff", "ID+ISO", "ID", "ISO"};
+  // vector<string> suffixs{"", "_1", "_2", "_3"};
+  vector<string> triggerNames{"HLT_IsoMu20"};
+  vector<string> dirNames{"trigeff"};
+  vector<string> suffixs{""};
 
   TFile* outfile; 
   bool outputHists = false;
@@ -90,7 +132,7 @@ int getScaleFactor()
 
   for (unsigned int i = 0; i < triggerNames.size(); ++i) {
     for (unsigned int j = 0; j < dirNames.size(); ++j) {
-      vector<TH1F*> hScales = getEfficiencyPlot(f_data, f_mcdy, triggerNames[i], dirNames[j], suffixs[j], false);
+      vector<TH1F*> hScales = getEfficiencyPlot(f_data, f_mcdy, triggerNames[i], dirNames[j], suffixs[j], true);
 
       if (outputHists) {
         TDirectory* dir = (TDirectory*) outfile->Get(triggerNames[i].c_str());
