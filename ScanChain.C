@@ -228,9 +228,9 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
   // triggerNames.push_back("HLT_Ele27_eta2p1_WPLoose_Gsf");
 
   // Separate vector to store the pt cut to be used for eta and phi
-  vector<float> triggerPtCuts(triggerNames.size(), 30);
-  triggerPtCuts[2] = 25;
-  triggerPtCuts[3] = 25;
+  vector<float> triggerPtCuts(triggerNames.size(), 50);
+  // triggerPtCuts[2] = 25;
+  // triggerPtCuts[3] = 25;
 
   vector< map< histType,TH1F*> > muonHists = creatMuonHists(triggerNames);
   vector< map< histType,TH1F*> > muonHists1 = creatMuonHists(triggerNames, "_1");
