@@ -1,17 +1,22 @@
 #include "TStyle.h"
 #include "TFile.h"
 
-vector<TH1F*> getEfficiencyPlot(TFile* file1, TFile* file2, string triggerName, string dirName, bool drawPlots = true) {
+vector<TH1F*> getEfficiencyPlot(TFile* file1, TFile* file2, string triggerName, string dirName, string suffix = "", bool drawPlots = true) {
   vector<TH1F*> effplots;
   string prefix = triggerName + "/" + dirName + "/h_eff_" + triggerName;
   
-  TH1F* num_mupt  = (TH1F*) file1->Get(Form("%s_mupt", prefix.c_str()));
-  TH1F* num_mueta = (TH1F*) file1->Get(Form("%s_mueta", prefix.c_str()));
-  TH1F* num_muphi = (TH1F*) file1->Get(Form("%s_muphi", prefix.c_str()));
+  TH1F* num_mupt  = (TH1F*) file1->Get(Form("%s_mupt%s", prefix.c_str(), suffix.c_str()));
+  TH1F* num_mueta = (TH1F*) file1->Get(Form("%s_mueta%s", prefix.c_str(), suffix.c_str()));
+  TH1F* num_muphi = (TH1F*) file1->Get(Form("%s_muphi%s", prefix.c_str(), suffix.c_str()));
 
-  TH1F* den_mupt  = (TH1F*) file2->Get(Form("%s_mupt", prefix.c_str()));
-  TH1F* den_mueta = (TH1F*) file2->Get(Form("%s_mueta", prefix.c_str()));
-  TH1F* den_muphi = (TH1F*) file2->Get(Form("%s_muphi", prefix.c_str()));
+  TH1F* den_mupt  = (TH1F*) file2->Get(Form("%s_mupt%s", prefix.c_str(), suffix.c_str()));
+  TH1F* den_mueta = (TH1F*) file2->Get(Form("%s_mueta%s", prefix.c_str(), suffix.c_str()));
+  TH1F* den_muphi = (TH1F*) file2->Get(Form("%s_muphi%s", prefix.c_str(), suffix.c_str()));
+
+  if (num_mupt == 0) {
+    cout << "What?!! " << prefix << endl;
+    return effplots;
+  }
 
   TH1F* eff_mupt  = (TH1F*) num_mupt->Clone();
   TH1F* eff_mueta = (TH1F*) num_mueta->Clone();
@@ -44,21 +49,21 @@ vector<TH1F*> getEfficiencyPlot(TFile* file1, TFile* file2, string triggerName, 
     eff_mupt->GetXaxis()->SetTitle("p_{T}");
     eff_mupt->GetYaxis()->SetRangeUser(0, 1.1);
     eff_mupt->Draw("PE");
-    c1->SaveAs(Form("plot/%s_scale_mupt.png", triggerName.c_str()));
+    c1->SaveAs(Form("plot/%s_%s_scale_mupt.pdf", triggerName.c_str(), dirName.c_str()));
     c1->Clear();
     tot_scale = num_mueta->Integral()/den_mueta->Integral();
     eff_mueta->SetTitle(Form("%s (tot. %.3f) in eta", titleTemp.c_str(), tot_scale));
     eff_mueta->GetXaxis()->SetTitle("eta");
     eff_mueta->GetYaxis()->SetRangeUser(0, 1.1);
     eff_mueta->Draw("PE");
-    c1->SaveAs(Form("plot/%s_scale_mueta.png", triggerName.c_str()));
+    c1->SaveAs(Form("plot/%s_%s_scale_mueta.pdf", triggerName.c_str(), dirName.c_str()));
     c1->Clear();
     tot_scale = num_muphi->Integral()/den_muphi->Integral();
     eff_muphi->SetTitle(Form("%s (tot. %.3f) in phi", titleTemp.c_str(), tot_scale));
     eff_muphi->GetXaxis()->SetTitle("phi");
     eff_muphi->GetYaxis()->SetRangeUser(0, 1.1);
     eff_muphi->Draw("PE");
-    c1->SaveAs(Form("plot/%s_scale_muphi.png", triggerName.c_str()));
+    c1->SaveAs(Form("plot/%s_%s_scale_muphi.pdf", triggerName.c_str(), dirName.c_str()));
     c1->Close();
   }
 
@@ -71,11 +76,20 @@ vector<TH1F*> getEfficiencyPlot(TFile* file1, TFile* file2, string triggerName, 
 
 int getScaleFactor()
 {
-  TFile* f_data = new TFile("hists/hists_idiso_2fb.root");
-  TFile* f_mcdy = new TFile("hists/hists_idiso_DY2.00TP.root");
+  TFile* f_data = new TFile("hists/hists_2fb.root");
+  TFile* f_mcdy = new TFile("hists/hists_DY2.00TP.root");
 
-  getEfficiencyPlot(f_data, f_mcdy, "HLT_IsoMu20", "trigeff");
+  getEfficiencyPlot(f_data, f_mcdy, "HLT_IsoMu20",   "trigeff");
   getEfficiencyPlot(f_data, f_mcdy, "HLT_IsoTkMu20", "trigeff");
+
+  getEfficiencyPlot(f_data, f_mcdy, "HLT_IsoMu20",   "ID+ISO", "_1");
+  getEfficiencyPlot(f_data, f_mcdy, "HLT_IsoTkMu20", "ID+ISO", "_1");
+
+  getEfficiencyPlot(f_data, f_mcdy, "HLT_IsoMu20",   "ID", "_2");
+  getEfficiencyPlot(f_data, f_mcdy, "HLT_IsoTkMu20", "ID", "_2");
+
+  getEfficiencyPlot(f_data, f_mcdy, "HLT_IsoMu20",   "ISO", "_3");
+  getEfficiencyPlot(f_data, f_mcdy, "HLT_IsoTkMu20", "ISO", "_3");
 
   return 0;
 }
