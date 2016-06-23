@@ -1,3 +1,4 @@
+// -*- C++ -*-
 #include "TStyle.h"
 #include "TFile.h"
 
@@ -213,15 +214,15 @@ int getScaleFactor()
   TFile* f_data = new TFile("hists/hists_2fb.root");
   TFile* f_mcdy = new TFile("hists/hists_DY2.00TP.root");
 
-  // vector<string> triggerNames{"HLT_IsoMu20", "HLT_IsoTkMu20"};
-  // vector<string> dirNames{"trigeff", "ID+ISO", "ID", "ISO"};
-  // vector<string> suffixs{"", "_1", "_2", "_3"};
-  vector<string> triggerNames{"HLT_IsoMu20"};
-  vector<string> dirNames{"trigeff"};
-  vector<string> suffixs{""};
+  vector<string> triggerNames{"HLT_IsoMu20", "HLT_IsoTkMu20"};
+  vector<string> dirNames{"trigeff", "ID+ISO", "ID", "ISO"};
+  vector<string> suffixs{"", "_1", "_2", "_3"};
+  // vector<string> triggerNames{"HLT_IsoMu20"};
+  // vector<string> dirNames{"trigeff"};
+  // vector<string> suffixs{""};
 
   TFile* outfile; 
-  bool outputHists = false;
+  bool outputHists = true;
   if (outputHists) outfile = new TFile("hists/eff_scalings.root", "RECREATE");
 
   for (unsigned int i = 0; i < triggerNames.size(); ++i) {

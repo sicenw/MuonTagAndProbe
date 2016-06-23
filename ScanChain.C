@@ -1,3 +1,4 @@
+// -*- C++ -*-
 // Usage:
 // > root -b doAll.C
 
