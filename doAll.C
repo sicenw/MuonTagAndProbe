@@ -12,7 +12,9 @@
   // ch->Add("/nfs-7/userdata/namin/forSicheng/2016BSingleMuon_80XLeptonTree.root");
   // ch->Add("/nfs-7/userdata/leptonTree/v2.00TP/2016SingleMu273590.root");
   // ch->Add("/nfs-7/userdata/leptonTree/v1.09/v1.09FR_80X/2016DoubleMuon.root");
-  ch->Add("/home/users/sicheng/working/leptree/2016SingleMu.root");
+  // ch->Add("/home/users/sicheng/working/leptree/2016SingleMu.root");
+  ch->Add("/nfs-7/userdata/leptonTree/v2.04TP/2016SingleMu.root");
+  // ch->Add("/nfs-7/userdata/leptonTree/v2.04TP/2016SingleEl.root");
 
   ScanChain(ch);
 }

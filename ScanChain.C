@@ -35,13 +35,13 @@ void Fill1F(TH1F *&hist, double x, double w = 1)
 
 enum histType {tag_mupt, tag_mueta, tag_muphi, den_mupt, den_mueta, den_muphi, num_mupt, num_mueta, num_muphi, den_invm, num_invm};
 
-vector< map< histType,TH1F*> > creatMuonHists(vector<string> triggerNames, string suffix = ""){
+vector< map<histType,TH1F*> > creatMuonHists(vector<string> triggerNames, string suffix = "") {
 
-  vector< map< histType,TH1F*> > triggerHists;
+  vector< map<histType,TH1F*> > triggerHists;
 
-  for(unsigned int i=0; i < triggerNames.size(); i++){
+  for (unsigned int i=0; i < triggerNames.size(); i++) {
 
-    map<histType, TH1F*> muonHists;
+    map<histType,TH1F*> muonHists;
 
     muonHists[tag_mupt]   = new TH1F(Form("h_tag_%s_mupt%s",   triggerNames[i].c_str(), suffix.c_str()), Form("Muon pt in tag_%s",  triggerNames[i].c_str()), 90, 0, 250);
     muonHists[tag_mueta]  = new TH1F(Form("h_tag_%s_mueta%s",  triggerNames[i].c_str(), suffix.c_str()), Form("Muon eta in tag_%s", triggerNames[i].c_str()), 60, -3, 3);
@@ -64,8 +64,8 @@ vector< map< histType,TH1F*> > creatMuonHists(vector<string> triggerNames, strin
   return triggerHists;
 }
 
-inline void writeEfficiencyPlots(map< histType,TH1F*>& histmap, string triggerName, TFile* file){
-  for(unsigned int j=0; j<histmap.size(); j++)
+inline void writeEfficiencyPlots(map< histType,TH1F*>& histmap, string triggerName, TFile* file) {
+  for (unsigned int j=0; j<histmap.size(); j++)
     histmap[(histType) j]->Write();
 
   TH1F *h_eff_mupt  = (TH1F*) histmap[num_mupt] ->Clone();
@@ -80,19 +80,19 @@ inline void writeEfficiencyPlots(map< histType,TH1F*>& histmap, string triggerNa
   h_eff_mueta->Divide(histmap[den_mueta]);
   h_eff_muphi->Divide(histmap[den_muphi]);
 
-  for (int i=1; i <= h_eff_mupt->GetNbinsX(); i++){
+  for (int i=1; i <= h_eff_mupt->GetNbinsX(); i++) {
     float p = h_eff_mupt->GetBinContent(i);
     if (histmap[den_mupt]->GetBinContent(i) == 0) h_eff_mupt->SetBinError(i, 0);
     else
       h_eff_mupt->SetBinError(i, sqrt(p*(1-p)/histmap[den_mupt]->GetBinContent(i)));
   }
-  for (int i=1; i <= h_eff_mueta->GetNbinsX(); i++){
+  for (int i=1; i <= h_eff_mueta->GetNbinsX(); i++) {
     float p = h_eff_mueta->GetBinContent(i);
     if (histmap[den_mueta]->GetBinContent(i) == 0) h_eff_mueta->SetBinError(i, 0);
     else
       h_eff_mueta->SetBinError(i, sqrt(p*(1-p)/histmap[den_mueta]->GetBinContent(i)));
   }
-  for (int i=1; i <= h_eff_muphi->GetNbinsX(); i++){
+  for (int i=1; i <= h_eff_muphi->GetNbinsX(); i++) {
     float p = h_eff_muphi->GetBinContent(i);
     if (histmap[den_muphi]->GetBinContent(i) == 0) h_eff_muphi->SetBinError(i, 0);
     else
@@ -137,11 +137,11 @@ inline void writeEfficiencyPlots(map< histType,TH1F*>& histmap, string triggerNa
   eff_muphi->Write();
 }
 
-vector<TBranch*> setupTriggerBranches(vector<string> triggerNames, TTree* tree){
+vector<TBranch*> setupTriggerBranches(vector<string> triggerNames, TTree* tree) {
 
   vector<TBranch*> trigBranches;
 
-  for(unsigned int i=0; i<triggerNames.size(); i++){
+  for (unsigned int i=0; i<triggerNames.size(); i++) {
     TBranch* trig_branch;
     trig_branch = tree->GetBranch(triggerNames[i].c_str());
     if (trig_branch == 0) {cerr << "Error: Cannot find branch under name: " << triggerNames[i] << endl; exit(-1);}
@@ -151,11 +151,11 @@ vector<TBranch*> setupTriggerBranches(vector<string> triggerNames, TTree* tree){
   return trigBranches;
 }
 
-vector<TBranch*> setupTagTriggerBranches(vector<string> triggerNames, TTree* tree){
+vector<TBranch*> setupTagTriggerBranches(vector<string> triggerNames, TTree* tree) {
 
   vector<TBranch*> tagTrigBranches;
 
-  for(unsigned int i=0; i<triggerNames.size(); i++){
+  for (unsigned int i=0; i<triggerNames.size(); i++) {
     TBranch* tag_trig_branch;
     tag_trig_branch = tree->GetBranch(Form("tag_%s", triggerNames[i].c_str()));
     if (tag_trig_branch == 0) {cerr << "Error: Cannot find branch under name: tag_" << triggerNames[i] << endl; exit(-1);}
@@ -165,7 +165,7 @@ vector<TBranch*> setupTagTriggerBranches(vector<string> triggerNames, TTree* tre
   return tagTrigBranches;
 }
 
-inline int getTriggerValue(TBranch* trig_branch, int event){
+inline int getTriggerValue(TBranch* trig_branch, int event) {
 
   if (trig_branch == 0) {cerr << "Error: getTriggerValue: TBranch* is empty!" << endl; return 0;}
 
@@ -176,36 +176,48 @@ inline int getTriggerValue(TBranch* trig_branch, int event){
   return trig_value;
 }
 
-inline void fillTagMuonHists(map< histType,TH1F* >& histmap, float ptcut = 30){
+inline void fillTagMuonHists(map< histType,TH1F* >& histmap, float ptcut = 30) {
   Fill1F(histmap[tag_mupt], tag_p4().pt());
-  if (tag_p4().pt() > ptcut){
+  if (tag_p4().pt() > ptcut) {
     Fill1F(histmap[tag_mueta], tag_p4().eta());
     Fill1F(histmap[tag_muphi], tag_p4().phi());
   }
 }
 
-inline void fillDenMuonHists(map< histType,TH1F* >& histmap, float ptcut = 30){
+inline void fillDenMuonHists(map< histType,TH1F* >& histmap, float ptcut = 30) {
   Fill1F(histmap[den_mupt], p4().pt());
-  if (p4().pt() > ptcut){
+  if (p4().pt() > ptcut) {
     Fill1F(histmap[den_mueta], p4().eta());
     Fill1F(histmap[den_muphi], p4().phi());
     Fill1F(histmap[den_invm], dilep_mass());
   }
 }
 
-inline void fillNumMuonHists(map< histType,TH1F* >& histmap, float ptcut = 30){
+inline void fillNumMuonHists(map< histType,TH1F* >& histmap, float ptcut = 30) {
   Fill1F(histmap[num_mupt], p4().pt());
-  if (p4().pt() > ptcut){
+  if (p4().pt() > ptcut) {
     Fill1F(histmap[num_mueta], p4().eta());
     Fill1F(histmap[num_muphi], p4().phi());
     Fill1F(histmap[num_invm], dilep_mass());
   }
 }
 
-inline void fillProbeMuonHists(map< histType,TH1F* >& histmap, TBranch* trig_branch, int event, float ptcut = 30){
+inline void fillProbeMuonHists(map< histType,TH1F* >& histmap, TBranch* trig_branch, int event, float ptcut = 30) {
   fillDenMuonHists(histmap, ptcut);
   if (getTriggerValue(trig_branch, event) > 0)
     fillNumMuonHists(histmap, ptcut);
+}
+
+inline bool passes_leptonID() {
+  if (abs(id()) == 13) return passes_POG_looseID() && dxyPV() < 0.2 && dZ() < 0.5;
+  if (abs(id()) == 11) return passes_POG_looseID() && dxyPV() < 0.0261 && dZ() < 0.41;
+  return false;
+}
+
+inline bool passes_IsoCut() {
+  if (abs(id()) == 13) return miniiso() < 0.2;
+  if (abs(id()) == 11) return miniiso() < 0.1;
+  return false;
 }
 
 int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFilePrefix = "test") {
@@ -224,8 +236,8 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
   vector<string> triggerNames;
   triggerNames.push_back("HLT_IsoMu24");
   triggerNames.push_back("HLT_IsoTkMu24");
-  triggerNames.push_back("HLT_IsoMu20");
-  triggerNames.push_back("HLT_IsoTkMu20");
+  // triggerNames.push_back("HLT_IsoMu20");
+  // triggerNames.push_back("HLT_IsoTkMu20");
   // triggerNames.push_back("HLT_Ele27_eta2p1_WPLoose_Gsf");
 
   // Separate vector to store the pt cut to be used for eta and phi
@@ -241,7 +253,7 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
   // Loop over events to Analyze
   unsigned int nEventsTotal = 0;
   unsigned int nEventsChain = chain->GetEntries();
-  if( nEvents >= 0 ) nEventsChain = nEvents;
+  if (nEvents >= 0) nEventsChain = nEvents;
   TObjArray *listOfFiles = chain->GetListOfFiles();
   TIter fileIter(listOfFiles);
   TFile *currentFile = 0;
@@ -252,8 +264,8 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
     // Get File Content
     TFile file( currentFile->GetTitle() );
     TTree *tree = (TTree*)file.Get("t");
-    if(fast) TTreeCache::SetLearnEntries(10);
-    if(fast) tree->SetCacheSize(128*1024*1024);
+    if (fast) TTreeCache::SetLearnEntries(10);
+    if (fast) tree->SetCacheSize(128*1024*1024);
     t.Init(tree);
 
     int evt_num = -1;
@@ -271,13 +283,13 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
     for (unsigned int event = 0; event < nEventsTree; ++event) {
 
       // Get Event Content
-      if( nEventsTotal >= nEventsChain ) continue;
-      if(fast) tree->LoadTree(event);
+      if (nEventsTotal >= nEventsChain) continue;
+      if (fast) tree->LoadTree(event);
       t.GetEntry(event);
       ++nEventsTotal;
 
       // Progress
-      LepTree::progress( nEventsTotal, nEventsChain );
+      LepTree::progress(nEventsTotal, nEventsChain);
 
       // Analysis Code
 
@@ -297,17 +309,17 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
       if (charge()*tag_charge() > 0) continue;
       if (tag_p4().pt() < 25) continue;
       if (tag_RelIso03EA() > 0.1) continue;
-      if (dilep_mass() < 75 || dilep_mass() > 105) continue;
+      if (dilep_mass() < 81.2 || dilep_mass() > 101.2) continue;
       if (!pid_PFMuon()) continue;
 
       ++nMuonCount;
       // if (nMuonCount > 2) continue;
 
-      for (unsigned int i=0; i<triggerNames.size(); i++){
+      for (unsigned int i=0; i<triggerNames.size(); i++) {
         if (getTriggerValue(tagTrigBranches[i], event) <= 0) continue;
 
         fillTagMuonHists(muonHists[i],  triggerPtCuts[i]);
-        if (RelIso03EA() < 0.15 && passes_POG_tightID())
+        if (passes_IsoCut() && passes_leptonID())
           fillProbeMuonHists(muonHists[i], trigBranches[i], event, triggerPtCuts[i]);
 
         fillTagMuonHists(muonHists1[i], triggerPtCuts[i]);
@@ -315,18 +327,18 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
         fillTagMuonHists(muonHists3[i], triggerPtCuts[i]);
 
         fillDenMuonHists(muonHists1[i], triggerPtCuts[i]);
-        if (RelIso03EA() < 0.1 && passes_POG_tightID())
+        if (passes_IsoCut() && passes_leptonID())
           fillNumMuonHists(muonHists1[i], triggerPtCuts[i]);
 
-        if (RelIso03EA() < 0.1) {
+        if (passes_IsoCut()) {
           fillDenMuonHists(muonHists2[i], triggerPtCuts[i]);
-          if (passes_POG_tightID())
+          if (passes_leptonID())
             fillNumMuonHists(muonHists2[i], triggerPtCuts[i]);
         }
 
-        if (passes_POG_tightID()) {
+        if (passes_leptonID()) {
           fillDenMuonHists(muonHists3[i], triggerPtCuts[i]);
-          if (RelIso03EA() < 0.1)
+          if (passes_IsoCut())
             fillNumMuonHists(muonHists3[i], triggerPtCuts[i]);
         }
       }
