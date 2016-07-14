@@ -239,6 +239,7 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
   // triggerNames.push_back("HLT_IsoMu20");
   // triggerNames.push_back("HLT_IsoTkMu20");
   // triggerNames.push_back("HLT_Ele27_eta2p1_WPLoose_Gsf");
+  // triggerNames.push_back("HLT_Ele22_eta2p1_WPLoose_Gsf");
 
   // Separate vector to store the pt cut to be used for eta and phi
   vector<float> triggerPtCuts(triggerNames.size(), 50);
@@ -304,7 +305,7 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
 
       // --- New Tag & Probe ---
       if (abs(id()) != 13) continue;
-      if (p4().pt() < 15) continue;
+      if (p4().pt() < 10) continue;
       if (fabs(p4().eta()) > 2.4 ) continue;
       if (charge()*tag_charge() > 0) continue;
       if (tag_p4().pt() < 25) continue;

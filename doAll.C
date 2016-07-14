@@ -15,6 +15,7 @@
   // ch->Add("/home/users/sicheng/working/leptree/2016SingleMu.root");
   ch->Add("/nfs-7/userdata/leptonTree/v2.04TP/2016SingleMu.root");
   // ch->Add("/nfs-7/userdata/leptonTree/v2.04TP/2016SingleEl.root");
+  // ch->Add("/nfs-7/userdata/leptonTree/v2.04TP/DY_madgraph80X.root");
 
   ScanChain(ch);
 }

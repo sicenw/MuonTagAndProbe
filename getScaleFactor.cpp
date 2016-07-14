@@ -211,10 +211,11 @@ vector<TH1F*> getEfficiencyPlots(TFile* file1, TFile* file2, string triggerName,
 
 int getScaleFactor()
 {
-  TFile* f_data = new TFile("hists/hists_2fb.root");
-  TFile* f_mcdy = new TFile("hists/hists_DY2.00TP.root");
+  TFile* f_data = new TFile("hists/hists_mt2_mu_2.04TP.root");
+  TFile* f_mcdy = new TFile("hists/hists_mt2_dymu_2.04TP.root");
 
   vector<string> triggerNames{"HLT_IsoMu20", "HLT_IsoTkMu20"};
+  // vector<string> triggerNames{"HLT_Ele27_eta2p1_WPLoose_Gsf"};
   vector<string> dirNames{"trigeff", "ID+ISO", "ID", "ISO"};
   vector<string> suffixs{"", "_1", "_2", "_3"};
   // vector<string> triggerNames{"HLT_IsoMu20"};
