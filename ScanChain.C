@@ -24,7 +24,7 @@
 using namespace std;
 using namespace lepTree;
 
-typedef ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<float> > LorentzVector;
+typedef ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<float>> LorentzVector;
 
 void Fill1F(TH1F *&hist, double x, double w = 1)
 {
@@ -35,9 +35,9 @@ void Fill1F(TH1F *&hist, double x, double w = 1)
 
 enum histType {tag_mupt, tag_mueta, tag_muphi, den_mupt, den_mueta, den_muphi, num_mupt, num_mueta, num_muphi, den_invm, num_invm};
 
-vector< map<histType,TH1F*> > creatMuonHists(vector<string> triggerNames, string suffix = "") {
+vector<map<histType,TH1F*>> creatMuonHists(vector<string> triggerNames, string suffix = "") {
 
-  vector< map<histType,TH1F*> > triggerHists;
+  vector<map<histType,TH1F*>> triggerHists;
 
   for (unsigned int i=0; i < triggerNames.size(); i++) {
 
@@ -246,10 +246,10 @@ int ScanChain( TChain* chain, bool fast = true, int nEvents = -1, string skimFil
   // triggerPtCuts[2] = 25;
   // triggerPtCuts[3] = 25;
 
-  vector< map< histType,TH1F*> > muonHists = creatMuonHists(triggerNames);
-  vector< map< histType,TH1F*> > muonHists1 = creatMuonHists(triggerNames, "_1");
-  vector< map< histType,TH1F*> > muonHists2 = creatMuonHists(triggerNames, "_2");
-  vector< map< histType,TH1F*> > muonHists3 = creatMuonHists(triggerNames, "_3");
+  vector<map<histType,TH1F*>> muonHists = creatMuonHists(triggerNames);
+  vector<map<histType,TH1F*>> muonHists1 = creatMuonHists(triggerNames, "_1");
+  vector<map<histType,TH1F*>> muonHists2 = creatMuonHists(triggerNames, "_2");
+  vector<map<histType,TH1F*>> muonHists3 = creatMuonHists(triggerNames, "_3");
 
   // Loop over events to Analyze
   unsigned int nEventsTotal = 0;
